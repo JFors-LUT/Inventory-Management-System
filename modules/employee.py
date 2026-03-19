@@ -2,6 +2,8 @@ from tkinter import*
 from PIL import Image,ImageTk
 from tkinter import ttk,messagebox
 import sqlite3
+from data.db.db_helper import db_connect
+from ui.ui_styles import FONT_GENERAL, APP_FONT
 
 class employeeClass:
     def __init__(self,root):
@@ -27,65 +29,65 @@ class employeeClass:
         self.var_salary=StringVar()
 
         #---------- Search Frame -------------
-        SearchFrame=LabelFrame(self.root,text="Search Employee",font=("goudy old style",12,"bold"),bd=2,relief=RIDGE,bg="white")
+        SearchFrame=LabelFrame(self.root,text="Search Employee",font=(APP_FONT,12,"bold"),bd=2,relief=RIDGE,bg="white")
         SearchFrame.place(x=250,y=20,width=600,height=70)
 
         #------------ options ----------------
-        cmb_search=ttk.Combobox(SearchFrame,textvariable=self.var_searchby,values=("Select","Email","Name","Contact"),state='readonly',justify=CENTER,font=("goudy old style",15))
+        cmb_search=ttk.Combobox(SearchFrame,textvariable=self.var_searchby,values=("Select","Email","Name","Contact"),state='readonly',justify=CENTER,font=FONT_GENERAL)
         cmb_search.place(x=10,y=10,width=180)
         cmb_search.current(0)
 
-        txt_search=Entry(SearchFrame,textvariable=self.var_searchtxt,font=("goudy old style",15),bg="lightyellow").place(x=200,y=10)
-        btn_search=Button(SearchFrame,command=self.search,text="Search",font=("goudy old style",15),bg="#4caf50",fg="white",cursor="hand2").place(x=410,y=9,width=150,height=30)
+        txt_search=Entry(SearchFrame,textvariable=self.var_searchtxt,font=FONT_GENERAL,bg="lightyellow").place(x=200,y=10)
+        btn_search=Button(SearchFrame,command=self.search,text="Search",font=FONT_GENERAL,bg="#4caf50",fg="white",cursor="hand2").place(x=410,y=9,width=150,height=30)
 
         #-------------- title ---------------
-        title=Label(self.root,text="Employee Details",font=("goudy old style",15),bg="#0f4d7d",fg="white").place(x=50,y=100,width=1000)
+        title=Label(self.root,text="Employee Details",font=FONT_GENERAL,bg="#0f4d7d",fg="white").place(x=50,y=100,width=1000)
 
         #-------------- content ---------------
         #---------- row 1 ----------------
-        lbl_empid=Label(self.root,text="Emp ID",font=("goudy old style",15),bg="white").place(x=50,y=150)
-        lbl_gender=Label(self.root,text="Gender",font=("goudy old style",15),bg="white").place(x=350,y=150)
-        lbl_contact=Label(self.root,text="Contact",font=("goudy old style",15),bg="white").place(x=750,y=150)
+        lbl_empid=Label(self.root,text="Emp ID",font=FONT_GENERAL,bg="white").place(x=50,y=150)
+        lbl_gender=Label(self.root,text="Gender",font=FONT_GENERAL,bg="white").place(x=350,y=150)
+        lbl_contact=Label(self.root,text="Contact",font=FONT_GENERAL,bg="white").place(x=750,y=150)
 
-        txt_empid=Entry(self.root,textvariable=self.var_emp_id,font=("goudy old style",15),bg="lightyellow").place(x=150,y=150,width=180)
-        cmb_gender=ttk.Combobox(self.root,textvariable=self.var_gender,values=("Select","Male","Female","Other"),state='readonly',justify=CENTER,font=("goudy old style",15))
+        txt_empid=Entry(self.root,textvariable=self.var_emp_id,font=FONT_GENERAL,bg="lightyellow").place(x=150,y=150,width=180)
+        cmb_gender=ttk.Combobox(self.root,textvariable=self.var_gender,values=("Select","Male","Female","Other"),state='readonly',justify=CENTER,font=FONT_GENERAL)
         cmb_gender.place(x=500,y=150,width=180)
         cmb_gender.current(0)
-        txt_contact=Entry(self.root,textvariable=self.var_contact,font=("goudy old style",15),bg="lightyellow").place(x=850,y=150,width=180)
+        txt_contact=Entry(self.root,textvariable=self.var_contact,font=FONT_GENERAL,bg="lightyellow").place(x=850,y=150,width=180)
 
         #---------- row 2 ----------------
-        lbl_name=Label(self.root,text="Name",font=("goudy old style",15),bg="white").place(x=50,y=190)
-        lbl_dob=Label(self.root,text="D.O.B.",font=("goudy old style",15),bg="white").place(x=350,y=190)
-        lbl_doj=Label(self.root,text="D.O.J.",font=("goudy old style",15),bg="white").place(x=750,y=190)
+        lbl_name=Label(self.root,text="Name",font=FONT_GENERAL,bg="white").place(x=50,y=190)
+        lbl_dob=Label(self.root,text="D.O.B.",font=FONT_GENERAL,bg="white").place(x=350,y=190)
+        lbl_doj=Label(self.root,text="D.O.J.",font=FONT_GENERAL,bg="white").place(x=750,y=190)
 
-        txt_name=Entry(self.root,textvariable=self.var_name,font=("goudy old style",15),bg="lightyellow").place(x=150,y=190,width=180)
-        txt_dob=Entry(self.root,textvariable=self.var_dob,font=("goudy old style",15),bg="lightyellow").place(x=500,y=190,width=180)
-        txt_doj=Entry(self.root,textvariable=self.var_doj,font=("goudy old style",15),bg="lightyellow").place(x=850,y=190,width=180)
+        txt_name=Entry(self.root,textvariable=self.var_name,font=FONT_GENERAL,bg="lightyellow").place(x=150,y=190,width=180)
+        txt_dob=Entry(self.root,textvariable=self.var_dob,font=FONT_GENERAL,bg="lightyellow").place(x=500,y=190,width=180)
+        txt_doj=Entry(self.root,textvariable=self.var_doj,font=FONT_GENERAL,bg="lightyellow").place(x=850,y=190,width=180)
 
         #---------- row 3 ----------------
-        lbl_email=Label(self.root,text="Email",font=("goudy old style",15),bg="white").place(x=50,y=230)
-        lbl_pass=Label(self.root,text="Password",font=("goudy old style",15),bg="white").place(x=350,y=230)
-        lbl_utype=Label(self.root,text="User Type",font=("goudy old style",15),bg="white").place(x=750,y=230)
+        lbl_email=Label(self.root,text="Email",font=FONT_GENERAL,bg="white").place(x=50,y=230)
+        lbl_pass=Label(self.root,text="Password",font=FONT_GENERAL,bg="white").place(x=350,y=230)
+        lbl_utype=Label(self.root,text="User Type",font=FONT_GENERAL,bg="white").place(x=750,y=230)
 
-        txt_email=Entry(self.root,textvariable=self.var_email,font=("goudy old style",15),bg="lightyellow").place(x=150,y=230,width=180)
-        txt_pass=Entry(self.root,textvariable=self.var_pass,font=("goudy old style",15),bg="lightyellow").place(x=500,y=230,width=180)
-        cmb_utype=ttk.Combobox(self.root,textvariable=self.var_utype,values=("Admin","Employee"),state='readonly',justify=CENTER,font=("goudy old style",15))
+        txt_email=Entry(self.root,textvariable=self.var_email,font=FONT_GENERAL,bg="lightyellow").place(x=150,y=230,width=180)
+        txt_pass=Entry(self.root,textvariable=self.var_pass,font=FONT_GENERAL,bg="lightyellow").place(x=500,y=230,width=180)
+        cmb_utype=ttk.Combobox(self.root,textvariable=self.var_utype,values=("Admin","Employee"),state='readonly',justify=CENTER,font=FONT_GENERAL)
         cmb_utype.place(x=850,y=230,width=180)
         cmb_utype.current(0)
         
         #---------- row 4 ----------------
-        lbl_address=Label(self.root,text="Address",font=("goudy old style",15),bg="white").place(x=50,y=270)
-        lbl_salary=Label(self.root,text="Salary",font=("goudy old style",15),bg="white").place(x=500,y=270)
+        lbl_address=Label(self.root,text="Address",font=FONT_GENERAL,bg="white").place(x=50,y=270)
+        lbl_salary=Label(self.root,text="Salary",font=FONT_GENERAL,bg="white").place(x=500,y=270)
 
-        self.txt_address=Text(self.root,font=("goudy old style",15),bg="lightyellow")
+        self.txt_address=Text(self.root,font=FONT_GENERAL,bg="lightyellow")
         self.txt_address.place(x=150,y=270,width=300,height=60)
-        txt_salary=Entry(self.root,textvariable=self.var_salary,font=("goudy old style",15),bg="lightyellow").place(x=600,y=270,width=180)
+        txt_salary=Entry(self.root,textvariable=self.var_salary,font=FONT_GENERAL,bg="lightyellow").place(x=600,y=270,width=180)
         
         #-------------- buttons -----------------
-        btn_add=Button(self.root,text="Save",command=self.add,font=("goudy old style",15),bg="#2196f3",fg="white",cursor="hand2").place(x=500,y=305,width=110,height=28)
-        btn_update=Button(self.root,text="Update",command=self.update,font=("goudy old style",15),bg="#4caf50",fg="white",cursor="hand2").place(x=620,y=305,width=110,height=28)
-        btn_delete=Button(self.root,text="Delete",command=self.delete,font=("goudy old style",15),bg="#f44336",fg="white",cursor="hand2").place(x=740,y=305,width=110,height=28)
-        btn_clear=Button(self.root,text="Clear",command=self.clear,font=("goudy old style",15),bg="#607d8b",fg="white",cursor="hand2").place(x=860,y=305,width=110,height=28)
+        btn_add=Button(self.root,text="Save",command=self.add,font=FONT_GENERAL,bg="#2196f3",fg="white",cursor="hand2").place(x=500,y=305,width=110,height=28)
+        btn_update=Button(self.root,text="Update",command=self.update,font=FONT_GENERAL,bg="#4caf50",fg="white",cursor="hand2").place(x=620,y=305,width=110,height=28)
+        btn_delete=Button(self.root,text="Delete",command=self.delete,font=FONT_GENERAL,bg="#f44336",fg="white",cursor="hand2").place(x=740,y=305,width=110,height=28)
+        btn_clear=Button(self.root,text="Clear",command=self.clear,font=FONT_GENERAL,bg="#607d8b",fg="white",cursor="hand2").place(x=860,y=305,width=110,height=28)
 
         #------------ employee details -------------
         emp_frame=Frame(self.root,bd=3,relief=RIDGE)
@@ -128,8 +130,9 @@ class employeeClass:
         self.show()
 #-----------------------------------------------------------------------------------------------------
     def add(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
+
         try:
             if self.var_emp_id.get()=="":
                 messagebox.showerror("Error","Employee ID must be required",parent=self.root)
@@ -160,8 +163,9 @@ class employeeClass:
             messagebox.showerror("Error",f"Error due to : {str(ex)}")
 
     def show(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
+
         try:
             cur.execute("select * from employee")
             rows=cur.fetchall()
@@ -189,8 +193,9 @@ class employeeClass:
         self.var_salary.set(row[10])
 
     def update(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
+
         try:
             if self.var_emp_id.get()=="":
                 messagebox.showerror("Error","Employee ID must be required",parent=self.root)
@@ -220,8 +225,9 @@ class employeeClass:
             messagebox.showerror("Error",f"Error due to : {str(ex)}")
 
     def delete(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
+        
         try:
             if self.var_emp_id.get()=="":
                 messagebox.showerror("Error","Employee ID must be required",parent=self.root)
@@ -257,8 +263,8 @@ class employeeClass:
         self.show()
 
     def search(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
         try:
             if self.var_searchby.get()=="Select":
                 messagebox.showerror("Error","Select Search By option",parent=self.root)

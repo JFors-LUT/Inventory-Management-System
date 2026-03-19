@@ -1,7 +1,19 @@
-from tkinter import*
+import os
+from tkinter import *
 from PIL import Image,ImageTk
 from tkinter import ttk,messagebox
 import sqlite3
+from data.db.db_helper import db_connect
+from config import IMAGE_DIR
+from ui.ui_utility import load_and_place_images
+
+from ui.ui_styles import FONT_GENERAL, APP_FONT
+
+#category images
+IMG_CAT = os.path.join(IMAGE_DIR, "cat.jpg")
+IMG_CATEGORY = os.path.join(IMAGE_DIR, "category.jpg")
+
+
 
 class categoryClass:
     def __init__(self,root):
@@ -11,17 +23,23 @@ class categoryClass:
         self.root.resizable(False,False)
         self.root.focus_force()
 
+        #--------- image data ---------
+        image_layout = {
+            "img1": {"path": IMG_CAT, "pos": (50, 220), "resize": (500, 250), "border": 2, "relief": "raised" },
+            "img2": {"path": IMG_CATEGORY, "pos": (580, 220), "resize": (500, 250), "border": 2, "relief": "raised" }
+            }
+
         #------------ variables -------------
         self.var_cat_id=StringVar()
         self.var_name=StringVar()
         #--------------- title ---------------------
-        lbl_title=Label(self.root,text="Manage Product Category",font=("goudy old style",30),bg="#184a45",fg="white",bd=3,relief=RIDGE).pack(side=TOP,fill=X,padx=10,pady=20)
+        lbl_title=Label(self.root,text="Manage Product Category",font=(APP_FONT,30),bg="#184a45",fg="white",bd=3,relief=RIDGE).pack(side=TOP,fill=X,padx=10,pady=20)
         
-        lbl_mame=Label(self.root,text="Enter Category Name",font=("goudy old style",30),bg="white").place(x=50,y=100)
-        txt_mame=Entry(self.root,textvariable=self.var_name,bg="lightyellow",font=("goudy old style",18)).place(x=50,y=170,width=300)
+        lbl_mame=Label(self.root,text="Enter Category Name",font=(APP_FONT,30),bg="white").place(x=50,y=100)
+        txt_mame=Entry(self.root,textvariable=self.var_name,bg="lightyellow",font=(APP_FONT,18)).place(x=50,y=170,width=300)
 
-        btn_add=Button(self.root,text="ADD",command=self.add,font=("goudy old style",15),bg="#4caf50",fg="white",cursor="hand2").place(x=360,y=170,width=150,height=30)
-        btn_delete=Button(self.root,text="Delete",command=self.delete,font=("goudy old style",15),bg="red",fg="white",cursor="hand2").place(x=520,y=170,width=150,height=30)
+        btn_add=Button(self.root,text="ADD",command=self.add,font=FONT_GENERAL,bg="#4caf50",fg="white",cursor="hand2").place(x=360,y=170,width=150,height=30)
+        btn_delete=Button(self.root,text="Delete",command=self.delete,font=FONT_GENERAL,bg="red",fg="white",cursor="hand2").place(x=520,y=170,width=150,height=30)
 
         #------------ category details -------------
         cat_frame=Frame(self.root,bd=3,relief=RIDGE)
@@ -46,21 +64,12 @@ class categoryClass:
         self.show()
 
         #----------------- images ---------------------
-        self.im1=Image.open("Inventory-Management-System/images/cat.jpg")
-        self.im1=self.im1.resize((500,250))
-        self.im1=ImageTk.PhotoImage(self.im1)
-        self.lbl_im1=Label(self.root,image=self.im1,bd=2,relief=RAISED)
-        self.lbl_im1.place(x=50,y=220)
+        self.images, self.labels = load_and_place_images(self.root, image_layout)
+        #-------------------------------------------------- 
 
-        self.im2=Image.open("Inventory-Management-System/images/category.jpg")
-        self.im2=self.im2.resize((500,250))
-        self.im2=ImageTk.PhotoImage(self.im2)
-        self.lbl_im2=Label(self.root,image=self.im2,bd=2,relief=RAISED)
-        self.lbl_im2.place(x=580,y=220)
-#----------------------------------------------------------------------------------
     def add(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
         try:
             if self.var_name.get()=="":
                 messagebox.showerror("Error","Category Name must be required",parent=self.root)
@@ -81,8 +90,8 @@ class categoryClass:
             messagebox.showerror("Error",f"Error due to : {str(ex)}")
 
     def show(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
         try:
             cur.execute("select * from category")
             rows=cur.fetchall()
@@ -105,8 +114,8 @@ class categoryClass:
         self.var_name.set(row[1])
     
     def delete(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
         try:
             if self.var_cat_id.get()=="":
                 messagebox.showerror("Error","Category name must be required",parent=self.root)

@@ -5,6 +5,15 @@ import sqlite3
 import time
 import os
 import tempfile
+from config import IMAGE_DIR, BILL_DIR
+from data.db.db_helper import db_connect
+from ui.ui_utility import load_image
+
+from ui.ui_styles import FONT_TITLE, FONT_BILLING_PRIMARY, FONT_BILLING_SECONDARY
+
+
+#billing images
+IMG_LOGO = os.path.join(IMAGE_DIR, "logo1.png")
 
 class billClass:
     def __init__(self,root):
@@ -16,33 +25,33 @@ class billClass:
         self.chk_print=0
 
         #------------- title --------------
-        self.icon_title=PhotoImage(file="images/logo1.png")
-        title=Label(self.root,text="Inventory Management System",image=self.icon_title,compound=LEFT,font=("times new roman",40,"bold"),bg="#010c48",fg="white",anchor="w",padx=20).place(x=0,y=0,relwidth=1,height=70)
+        self.icon_title=PhotoImage(file=IMG_LOGO)
+        title=Label(self.root,text="Inventory Management System",image=self.icon_title,compound=LEFT,font=FONT_TITLE,bg="#010c48",fg="white",anchor="w",padx=20).place(x=0,y=0,relwidth=1,height=70)
 
         #------------ logout button -----------
-        btn_logout=Button(self.root,text="Logout",font=("times new roman",15,"bold"),bg="yellow",cursor="hand2").place(x=1150,y=10,height=50,width=150)
+        btn_logout=Button(self.root,text="Logout",font=(FONT_BILLING_PRIMARY,15,"bold"),bg="yellow",cursor="hand2").place(x=1150,y=10,height=50,width=150)
 
         #------------ clock -----------------
-        self.lbl_clock=Label(self.root,text="Welcome to Inventory Management System\t\t Date: DD:MM:YYYY\t\t Time: HH:MM:SS",font=("times new roman",15),bg="#4d636d",fg="white")
+        self.lbl_clock=Label(self.root,text="Welcome to Inventory Management System\t\t Date: DD:MM:YYYY\t\t Time: HH:MM:SS",font=(FONT_BILLING_PRIMARY,15),bg="#4d636d",fg="white")
         self.lbl_clock.place(x=0,y=70,relwidth=1,height=30)
 
         #-------------- product frame -----------------
         ProductFrame1=Frame(self.root,bd=4,relief=RIDGE,bg="white")
         ProductFrame1.place(x=6,y=110,width=410,height=550)
 
-        pTitle=Label(ProductFrame1,text="All Products",font=("goudy old style",20,"bold"),bg="#262626",fg="white").pack(side=TOP,fill=X)
+        pTitle=Label(ProductFrame1,text="All Products",font=(FONT_BILLING_SECONDARY,20,"bold"),bg="#262626",fg="white").pack(side=TOP,fill=X)
         
         self.var_search=StringVar()
 
         ProductFrame2=Frame(ProductFrame1,bd=2,relief=RIDGE,bg="white")
         ProductFrame2.place(x=2,y=42,width=398,height=90)
 
-        lbl_search=Label(ProductFrame2,text="Search Product | By Name",font=("times new roman",15,"bold"),bg="white",fg="green").place(x=2,y=5)
+        lbl_search=Label(ProductFrame2,text="Search Product | By Name",font=(FONT_BILLING_PRIMARY,15,"bold"),bg="white",fg="green").place(x=2,y=5)
         
-        lbl_search=Label(ProductFrame2,text="Product Name",font=("times new roman",15,"bold"),bg="white").place(x=2,y=45)
-        txt_search=Entry(ProductFrame2,textvariable=self.var_search,font=("times new roman",15),bg="lightyellow").place(x=128,y=47,width=150,height=22)
-        btn_search=Button(ProductFrame2,text="Search",command=self.search,font=("goudy old style",15),bg="#2196f3",fg="white",cursor="hand2").place(x=285,y=45,width=100,height=25)
-        btn_show_all=Button(ProductFrame2,text="Show All",command=self.show,font=("goudy old style",15),bg="#083531",fg="white",cursor="hand2").place(x=285,y=10,width=100,height=25)
+        lbl_search=Label(ProductFrame2,text="Product Name",font=(FONT_BILLING_PRIMARY,15,"bold"),bg="white").place(x=2,y=45)
+        txt_search=Entry(ProductFrame2,textvariable=self.var_search,font=(FONT_BILLING_PRIMARY,15),bg="lightyellow").place(x=128,y=47,width=150,height=22)
+        btn_search=Button(ProductFrame2,text="Search",command=self.search,font=(FONT_BILLING_SECONDARY,15),bg="#2196f3",fg="white",cursor="hand2").place(x=285,y=45,width=100,height=25)
+        btn_show_all=Button(ProductFrame2,text="Show All",command=self.show,font=(FONT_BILLING_SECONDARY,15),bg="#083531",fg="white",cursor="hand2").place(x=285,y=10,width=100,height=25)
 
         ProductFrame3=Frame(ProductFrame1,bd=3,relief=RIDGE)
         ProductFrame3.place(x=2,y=140,width=398,height=375)
@@ -70,7 +79,7 @@ class billClass:
         self.product_Table.bind("<ButtonRelease-1>",self.get_data)
         self.show()
 
-        lbl_note=Label(ProductFrame1,text="Note: 'Enter 0 Quantity to remove product from the Cart'",font=("goudy old style",12),anchor="w",bg="white",fg="red").pack(side=BOTTOM,fill=X)
+        lbl_note=Label(ProductFrame1,text="Note: 'Enter 0 Quantity to remove product from the Cart'",font=(FONT_BILLING_SECONDARY,12),anchor="w",bg="white",fg="red").pack(side=BOTTOM,fill=X)
 
         #-------------- customer frame ---------------
         self.var_cname=StringVar()
@@ -79,13 +88,13 @@ class billClass:
         CustomerFrame=Frame(self.root,bd=4,relief=RIDGE,bg="white")
         CustomerFrame.place(x=420,y=110,width=530,height=70)
 
-        cTitle=Label(CustomerFrame,text="Customer Details",font=("goudy old style",15),bg="lightgray").pack(side=TOP,fill=X)
+        cTitle=Label(CustomerFrame,text="Customer Details",font=(FONT_BILLING_SECONDARY,15),bg="lightgray").pack(side=TOP,fill=X)
 
-        lbl_name=Label(CustomerFrame,text="Name",font=("times new roman",15),bg="white").place(x=5,y=35)
-        txt_name=Entry(CustomerFrame,textvariable=self.var_cname,font=("times new roman",13),bg="lightyellow").place(x=80,y=35,width=180)
+        lbl_name=Label(CustomerFrame,text="Name",font=(FONT_BILLING_PRIMARY,15),bg="white").place(x=5,y=35)
+        txt_name=Entry(CustomerFrame,textvariable=self.var_cname,font=(FONT_BILLING_PRIMARY,13),bg="lightyellow").place(x=80,y=35,width=180)
         
-        lbl_contact=Label(CustomerFrame,text="Contact No.",font=("times new roman",15),bg="white").place(x=270,y=35)
-        txt_contact=Entry(CustomerFrame,textvariable=self.var_contact,font=("times new roman",15),bg="lightyellow").place(x=380,y=35,width=140)
+        lbl_contact=Label(CustomerFrame,text="Contact No.",font=(FONT_BILLING_PRIMARY,15),bg="white").place(x=270,y=35)
+        txt_contact=Entry(CustomerFrame,textvariable=self.var_contact,font=(FONT_BILLING_PRIMARY,15),bg="lightyellow").place(x=380,y=35,width=140)
 
         Cal_Cart_Frame=Frame(self.root,bd=2,relief=RIDGE,bg="white")
         Cal_Cart_Frame.place(x=420,y=190,width=530,height=360)
@@ -122,7 +131,7 @@ class billClass:
         #------------------ cart frame --------------------
         Cart_Frame=Frame(Cal_Cart_Frame,bd=3,relief=RIDGE)
         Cart_Frame.place(x=280,y=8,width=245,height=342)
-        self.cartTitle=Label(Cart_Frame,text="Cart \t Total Products: [0]",font=("goudy old style",15),bg="lightgray")
+        self.cartTitle=Label(Cart_Frame,text="Cart \t Total Products: [0]",font=(FONT_BILLING_SECONDARY,15),bg="lightgray")
         self.cartTitle.pack(side=TOP,fill=X)
 
         scrolly=Scrollbar(Cart_Frame,orient=VERTICAL)
@@ -155,26 +164,26 @@ class billClass:
         Add_CartWidgets_Frame=Frame(self.root,bd=2,relief=RIDGE,bg="white")
         Add_CartWidgets_Frame.place(x=420,y=550,width=530,height=110)
 
-        lbl_p_name=Label(Add_CartWidgets_Frame,text="Product Name",font=("times new roman",15),bg="white").place(x=5,y=5)
-        txt_p_name=Entry(Add_CartWidgets_Frame,textvariable=self.var_pname,font=("times new roman",15),bg="lightyellow",state='readonly').place(x=5,y=35,width=190,height=22)
+        lbl_p_name=Label(Add_CartWidgets_Frame,text="Product Name",font=(FONT_BILLING_PRIMARY,15),bg="white").place(x=5,y=5)
+        txt_p_name=Entry(Add_CartWidgets_Frame,textvariable=self.var_pname,font=(FONT_BILLING_PRIMARY,15),bg="lightyellow",state='readonly').place(x=5,y=35,width=190,height=22)
 
-        lbl_p_price=Label(Add_CartWidgets_Frame,text="Price Per Qty",font=("times new roman",15),bg="white").place(x=230,y=5)
-        txt_p_price=Entry(Add_CartWidgets_Frame,textvariable=self.var_price,font=("times new roman",15),bg="lightyellow",state='readonly').place(x=230,y=35,width=150,height=22)
+        lbl_p_price=Label(Add_CartWidgets_Frame,text="Price Per Qty",font=(FONT_BILLING_PRIMARY,15),bg="white").place(x=230,y=5)
+        txt_p_price=Entry(Add_CartWidgets_Frame,textvariable=self.var_price,font=(FONT_BILLING_PRIMARY,15),bg="lightyellow",state='readonly').place(x=230,y=35,width=150,height=22)
 
-        lbl_p_qty=Label(Add_CartWidgets_Frame,text="Quantity",font=("times new roman",15),bg="white").place(x=390,y=5)
-        txt_p_qty=Entry(Add_CartWidgets_Frame,textvariable=self.var_qty,font=("times new roman",15),bg="lightyellow").place(x=390,y=35,width=120,height=22)
+        lbl_p_qty=Label(Add_CartWidgets_Frame,text="Quantity",font=(FONT_BILLING_PRIMARY,15),bg="white").place(x=390,y=5)
+        txt_p_qty=Entry(Add_CartWidgets_Frame,textvariable=self.var_qty,font=(FONT_BILLING_PRIMARY,15),bg="lightyellow").place(x=390,y=35,width=120,height=22)
 
-        self.lbl_inStock=Label(Add_CartWidgets_Frame,text="In Stock",font=("times new roman",15),bg="white")
+        self.lbl_inStock=Label(Add_CartWidgets_Frame,text="In Stock",font=(FONT_BILLING_PRIMARY,15),bg="white")
         self.lbl_inStock.place(x=5,y=70)
 
-        btn_clear_cart=Button(Add_CartWidgets_Frame,command=self.clear_cart,text="Clear",font=("times new roman",15,"bold"),bg="lightgray",cursor="hand2").place(x=180,y=70,width=150,height=30)
-        btn_add_cart=Button(Add_CartWidgets_Frame,command=self.add_update_cart,text="Add | Update",font=("times new roman",15,"bold"),bg="orange",cursor="hand2").place(x=340,y=70,width=180,height=30)
+        btn_clear_cart=Button(Add_CartWidgets_Frame,command=self.clear_cart,text="Clear",font=(FONT_BILLING_PRIMARY,15,"bold"),bg="lightgray",cursor="hand2").place(x=180,y=70,width=150,height=30)
+        btn_add_cart=Button(Add_CartWidgets_Frame,command=self.add_update_cart,text="Add | Update",font=(FONT_BILLING_PRIMARY,15,"bold"),bg="orange",cursor="hand2").place(x=340,y=70,width=180,height=30)
         
         #------------------- billing area -------------------
         billFrame=Frame(self.root,bd=2,relief=RIDGE,bg="white")
         billFrame.place(x=953,y=110,width=400,height=410)
 
-        BTitle=Label(billFrame,text="Customer Bill Area",font=("goudy old style",20,"bold"),bg="#262626",fg="white").pack(side=TOP,fill=X)
+        BTitle=Label(billFrame,text="Customer Bill Area",font=(FONT_BILLING_SECONDARY,20,"bold"),bg="#262626",fg="white").pack(side=TOP,fill=X)
         scrolly=Scrollbar(billFrame,orient=VERTICAL)
         scrolly.pack(side=RIGHT,fill=Y)
 
@@ -186,22 +195,22 @@ class billClass:
         billMenuFrame=Frame(self.root,bd=2,relief=RIDGE,bg="white")
         billMenuFrame.place(x=953,y=520,width=400,height=140)
 
-        self.lbl_amnt=Label(billMenuFrame,text="Bill Amount\n[0]",font=("goudy old style",15,"bold"),bg="#3f51b5",fg="white")
+        self.lbl_amnt=Label(billMenuFrame,text="Bill Amount\n[0]",font=(FONT_BILLING_SECONDARY,15,"bold"),bg="#3f51b5",fg="white")
         self.lbl_amnt.place(x=2,y=5,width=120,height=70)
 
-        self.lbl_discount=Label(billMenuFrame,text="Discount\n[5%]",font=("goudy old style",15,"bold"),bg="#8bc34a",fg="white")
+        self.lbl_discount=Label(billMenuFrame,text="Discount\n[5%]",font=(FONT_BILLING_SECONDARY,15,"bold"),bg="#8bc34a",fg="white")
         self.lbl_discount.place(x=124,y=5,width=120,height=70)
 
-        self.lbl_net_pay=Label(billMenuFrame,text="Net Pay\n[0]",font=("goudy old style",15,"bold"),bg="#607d8b",fg="white")
+        self.lbl_net_pay=Label(billMenuFrame,text="Net Pay\n[0]",font=(FONT_BILLING_SECONDARY,15,"bold"),bg="#607d8b",fg="white")
         self.lbl_net_pay.place(x=246,y=5,width=160,height=70)
 
-        btn_print=Button(billMenuFrame,text="Print",command=self.print_bill,cursor="hand2",font=("goudy old style",15,"bold"),bg="lightgreen",fg="white")
+        btn_print=Button(billMenuFrame,text="Print",command=self.print_bill,cursor="hand2",font=(FONT_BILLING_SECONDARY,15,"bold"),bg="lightgreen",fg="white")
         btn_print.place(x=2,y=80,width=120,height=50)
 
-        btn_clear_all=Button(billMenuFrame,text="Clear All",command=self.clear_all,cursor="hand2",font=("goudy old style",15,"bold"),bg="gray",fg="white")
+        btn_clear_all=Button(billMenuFrame,text="Clear All",command=self.clear_all,cursor="hand2",font=(FONT_BILLING_SECONDARY,15,"bold"),bg="gray",fg="white")
         btn_clear_all.place(x=124,y=80,width=120,height=50)
 
-        btn_generate=Button(billMenuFrame,text="Generate Bill",command=self.generate_bill,cursor="hand2",font=("goudy old style",15,"bold"),bg="#009688",fg="white")
+        btn_generate=Button(billMenuFrame,text="Generate Bill",command=self.generate_bill,cursor="hand2",font=(FONT_BILLING_SECONDARY,15,"bold"),bg="#009688",fg="white")
         btn_generate.place(x=246,y=80,width=160,height=50)
 
         self.show()
@@ -220,8 +229,8 @@ class billClass:
         self.var_cal_input.set(eval(result))
 
     def show(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
         try:
             cur.execute("select pid,name,price,qty,status from product where status='Active'")
             rows=cur.fetchall()
@@ -232,8 +241,8 @@ class billClass:
             messagebox.showerror("Error",f"Error due to : {str(ex)}")
 
     def search(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
         try:
             if self.var_search.get()=="":
                 messagebox.showerror("Error","Search input should be required",parent=self.root)
@@ -370,8 +379,8 @@ class billClass:
         self.txt_bill_area.insert(END,bill_bottom_temp)
 
     def bill_middle(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
         try:
             for row in self.cart_list:
                 pid=row[0]

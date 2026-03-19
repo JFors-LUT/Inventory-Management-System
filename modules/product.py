@@ -2,6 +2,8 @@ from tkinter import*
 from PIL import Image,ImageTk
 from tkinter import ttk,messagebox
 import sqlite3
+from data.db.db_helper import db_connect
+from ui.ui_styles import FONT_GENERAL, FONT_PRODUCT_TITLE, APP_FONT
 
 class productClass:
     def __init__(self,root):
@@ -29,48 +31,48 @@ class productClass:
         product_Frame.place(x=10,y=10,width=450,height=480)
 
         #------------ title --------------
-        title=Label(product_Frame,text="Manage Product Details",font=("goudy old style",18),bg="#0f4d7d",fg="white").pack(side=TOP,fill=X)
+        title=Label(product_Frame,text="Manage Product Details",font=(FONT_PRODUCT_TITLE),bg="#0f4d7d",fg="white").pack(side=TOP,fill=X)
 
-        lbl_category=Label(product_Frame,text="Category",font=("goudy old style",18),bg="white").place(x=30,y=60)
-        lbl_supplier=Label(product_Frame,text="Supplier",font=("goudy old style",18),bg="white").place(x=30,y=110)
-        lbl_product_name=Label(product_Frame,text="Name",font=("goudy old style",18),bg="white").place(x=30,y=160)
-        lbl_price=Label(product_Frame,text="Price",font=("goudy old style",18),bg="white").place(x=30,y=210)
-        lbl_qty=Label(product_Frame,text="Quantity",font=("goudy old style",18),bg="white").place(x=30,y=260)
-        lbl_status=Label(product_Frame,text="Status",font=("goudy old style",18),bg="white").place(x=30,y=310)
+        lbl_category=Label(product_Frame,text="Category",font=(FONT_PRODUCT_TITLE),bg="white").place(x=30,y=60)
+        lbl_supplier=Label(product_Frame,text="Supplier",font=(FONT_PRODUCT_TITLE),bg="white").place(x=30,y=110)
+        lbl_product_name=Label(product_Frame,text="Name",font=(FONT_PRODUCT_TITLE),bg="white").place(x=30,y=160)
+        lbl_price=Label(product_Frame,text="Price",font=(FONT_PRODUCT_TITLE),bg="white").place(x=30,y=210)
+        lbl_qty=Label(product_Frame,text="Quantity",font=(FONT_PRODUCT_TITLE),bg="white").place(x=30,y=260)
+        lbl_status=Label(product_Frame,text="Status",font=(FONT_PRODUCT_TITLE),bg="white").place(x=30,y=310)
 
-        cmb_cat=ttk.Combobox(product_Frame,textvariable=self.var_cat,values=self.cat_list,state='readonly',justify=CENTER,font=("goudy old style",15))
+        cmb_cat=ttk.Combobox(product_Frame,textvariable=self.var_cat,values=self.cat_list,state='readonly',justify=CENTER,font=FONT_GENERAL)
         cmb_cat.place(x=150,y=60,width=200)
         cmb_cat.current(0)
 
-        cmb_sup=ttk.Combobox(product_Frame,textvariable=self.var_sup,values=self.sup_list,state='readonly',justify=CENTER,font=("goudy old style",15))
+        cmb_sup=ttk.Combobox(product_Frame,textvariable=self.var_sup,values=self.sup_list,state='readonly',justify=CENTER,font=FONT_GENERAL)
         cmb_sup.place(x=150,y=110,width=200)
         cmb_sup.current(0)
 
-        txt_name=Entry(product_Frame,textvariable=self.var_name,font=("goudy old style",15),bg="lightyellow").place(x=150,y=160,width=200)
-        txt_price=Entry(product_Frame,textvariable=self.var_price,font=("goudy old style",15),bg="lightyellow").place(x=150,y=210,width=200)
-        txt_qty=Entry(product_Frame,textvariable=self.var_qty,font=("goudy old style",15),bg="lightyellow").place(x=150,y=260,width=200)
+        txt_name=Entry(product_Frame,textvariable=self.var_name,font=FONT_GENERAL,bg="lightyellow").place(x=150,y=160,width=200)
+        txt_price=Entry(product_Frame,textvariable=self.var_price,font=FONT_GENERAL,bg="lightyellow").place(x=150,y=210,width=200)
+        txt_qty=Entry(product_Frame,textvariable=self.var_qty,font=FONT_GENERAL,bg="lightyellow").place(x=150,y=260,width=200)
 
-        cmb_status=ttk.Combobox(product_Frame,textvariable=self.var_status,values=("Active","Inactive"),state='readonly',justify=CENTER,font=("goudy old style",15))
+        cmb_status=ttk.Combobox(product_Frame,textvariable=self.var_status,values=("Active","Inactive"),state='readonly',justify=CENTER,font=FONT_GENERAL)
         cmb_status.place(x=150,y=310,width=200)
         cmb_status.current(0)
 
         #-------------- buttons -----------------
-        btn_add=Button(product_Frame,text="Save",command=self.add,font=("goudy old style",15),bg="#2196f3",fg="white",cursor="hand2").place(x=10,y=400,width=100,height=40)
-        btn_update=Button(product_Frame,text="Update",command=self.update,font=("goudy old style",15),bg="#4caf50",fg="white",cursor="hand2").place(x=120,y=400,width=100,height=40)
-        btn_delete=Button(product_Frame,text="Delete",command=self.delete,font=("goudy old style",15),bg="#f44336",fg="white",cursor="hand2").place(x=230,y=400,width=100,height=40)
-        btn_clear=Button(product_Frame,text="Clear",command=self.clear,font=("goudy old style",15),bg="#607d8b",fg="white",cursor="hand2").place(x=340,y=400,width=100,height=40)
+        btn_add=Button(product_Frame,text="Save",command=self.add,font=FONT_GENERAL,bg="#2196f3",fg="white",cursor="hand2").place(x=10,y=400,width=100,height=40)
+        btn_update=Button(product_Frame,text="Update",command=self.update,font=FONT_GENERAL,bg="#4caf50",fg="white",cursor="hand2").place(x=120,y=400,width=100,height=40)
+        btn_delete=Button(product_Frame,text="Delete",command=self.delete,font=FONT_GENERAL,bg="#f44336",fg="white",cursor="hand2").place(x=230,y=400,width=100,height=40)
+        btn_clear=Button(product_Frame,text="Clear",command=self.clear,font=FONT_GENERAL,bg="#607d8b",fg="white",cursor="hand2").place(x=340,y=400,width=100,height=40)
 
         #---------- Search Frame -------------
-        SearchFrame=LabelFrame(self.root,text="Search Product",font=("goudy old style",12,"bold"),bd=2,relief=RIDGE,bg="white")
+        SearchFrame=LabelFrame(self.root,text="Search Product",font=(APP_FONT,12,"bold"),bd=2,relief=RIDGE,bg="white")
         SearchFrame.place(x=480,y=10,width=600,height=80)
 
         #------------ options ----------------
-        cmb_search=ttk.Combobox(SearchFrame,textvariable=self.var_searchby,values=("Select","Category","Supplier","Name"),state='readonly',justify=CENTER,font=("goudy old style",15))
+        cmb_search=ttk.Combobox(SearchFrame,textvariable=self.var_searchby,values=("Select","Category","Supplier","Name"),state='readonly',justify=CENTER,font=FONT_GENERAL)
         cmb_search.place(x=10,y=10,width=180)
         cmb_search.current(0)
 
-        txt_search=Entry(SearchFrame,textvariable=self.var_searchtxt,font=("goudy old style",15),bg="lightyellow").place(x=200,y=10)
-        btn_search=Button(SearchFrame,text="Search",command=self.search,font=("goudy old style",15),bg="#4caf50",fg="white",cursor="hand2").place(x=410,y=9,width=150,height=30)
+        txt_search=Entry(SearchFrame,textvariable=self.var_searchtxt,font=FONT_GENERAL,bg="lightyellow").place(x=200,y=10)
+        btn_search=Button(SearchFrame,text="Search",command=self.search,font=FONT_GENERAL,bg="#4caf50",fg="white",cursor="hand2").place(x=410,y=9,width=150,height=30)
 
         #------------ product details -------------
         product_frame=Frame(self.root,bd=3,relief=RIDGE)
@@ -108,8 +110,8 @@ class productClass:
     def fetch_cat_sup(self):
         self.cat_list.append("Empty")
         self.sup_list.append("Empty")
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
         try:
             cur.execute("select name from category")
             cat=cur.fetchall()
@@ -131,8 +133,8 @@ class productClass:
     
     
     def add(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
         try:
             if self.var_cat.get()=="Select" or self.var_cat.get()=="Empty" or self.var_sup=="Select" or self.var_sup=="Empty":
                 messagebox.showerror("Error","All fields are required",parent=self.root)
@@ -158,8 +160,8 @@ class productClass:
             messagebox.showerror("Error",f"Error due to : {str(ex)}")
 
     def show(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
         try:
             cur.execute("select * from product")
             rows=cur.fetchall()
@@ -182,8 +184,8 @@ class productClass:
         self.var_status.set(row[6])
 
     def update(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
         try:
             if self.var_pid.get()=="":
                 messagebox.showerror("Error","Please select product from list",parent=self.root)
@@ -209,8 +211,8 @@ class productClass:
             messagebox.showerror("Error",f"Error due to : {str(ex)}")
 
     def delete(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
         try:
             if self.var_pid.get()=="":
                 messagebox.showerror("Error","Select Product from the list",parent=self.root)
@@ -243,8 +245,8 @@ class productClass:
 
     
     def search(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
         try:
             if self.var_searchby.get()=="Select":
                 messagebox.showerror("Error","Select Search By option",parent=self.root)

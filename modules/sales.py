@@ -1,16 +1,15 @@
 from tkinter import *
 from PIL import Image, ImageTk
 from tkinter import ttk, messagebox
-import sqlite3
+#import sqlite3
 import os
+#from data.db.db_helper import db_connect
+from config import IMAGE_DIR, BILL_DIR
+from ui.ui_utility import *
+from ui.ui_styles import FONT_GENERAL, FONT_SALES_BTN, APP_FONT
 
-# ------------------ BASE PATH SETUP ------------------
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-IMAGE_DIR = os.path.join(BASE_DIR, "images")
-BILL_DIR = os.path.join(BASE_DIR, "bill")
-
-os.makedirs(BILL_DIR, exist_ok=True)
-# ---------------------------------------------------
+#sales images
+IMG_CAT2 = os.path.join(IMAGE_DIR, "cat2.jpg")
 
 class salesClass:
     def __init__(self, root):
@@ -23,32 +22,38 @@ class salesClass:
         self.blll_list = []
         self.var_invoice = StringVar()
 
+        #--------- image data ------
+
+        image_layout = {
+            "img1": {"path": IMG_CAT2, "pos": (700, 110), "resize": (450, 300), "border": 0, "relief": "flat" }
+        }
+
         # --------------- title ---------------------
         lbl_title = Label(
             self.root,
             text="View Customer Bills",
-            font=("goudy old style", 30),
+            font=(APP_FONT, 30),
             bg="#184a45",
             fg="white",
             bd=3,
             relief=RIDGE
         ).pack(side=TOP, fill=X, padx=10, pady=20)
 
-        lbl_invoice = Label(self.root, text="Invoice No.", font=("times new roman", 15), bg="white")
+        lbl_invoice = Label(self.root, text="Invoice No.", font=FONT_GENERAL, bg="white")
         lbl_invoice.place(x=50, y=100)
 
-        txt_invoice = Entry(self.root, textvariable=self.var_invoice, font=("times new roman", 15), bg="lightyellow")
+        txt_invoice = Entry(self.root, textvariable=self.var_invoice, font=FONT_GENERAL, bg="lightyellow")
         txt_invoice.place(x=160, y=100, width=180, height=28)
 
         btn_search = Button(
             self.root, text="Search", command=self.search,
-            font=("times new roman", 15, "bold"),
+            font=FONT_SALES_BTN,
             bg="#2196f3", fg="white", cursor="hand2"
         ).place(x=360, y=100, width=120, height=28)
 
         btn_clear = Button(
             self.root, text="Clear", command=self.clear,
-            font=("times new roman", 15, "bold"),
+            font=FONT_SALES_BTN,
             bg="lightgray", cursor="hand2"
         ).place(x=490, y=100, width=120, height=28)
 
@@ -58,7 +63,7 @@ class salesClass:
 
         scrolly = Scrollbar(sales_Frame, orient=VERTICAL)
         self.Sales_List = Listbox(
-            sales_Frame, font=("goudy old style", 15),
+            sales_Frame, font=FONT_GENERAL,
             bg="white", yscrollcommand=scrolly.set
         )
         scrolly.pack(side=RIGHT, fill=Y)
@@ -72,7 +77,7 @@ class salesClass:
 
         lbl_title2 = Label(
             bill_Frame, text="Customer Bill Area",
-            font=("goudy old style", 20), bg="orange"
+            font=(APP_FONT, 20), bg="orange"
         ).pack(side=TOP, fill=X)
 
         scrolly2 = Scrollbar(bill_Frame, orient=VERTICAL)
@@ -82,13 +87,15 @@ class salesClass:
         self.bill_area.pack(fill=BOTH, expand=1)
 
         # ------------- image -----------------
-        image_path = os.path.join(IMAGE_DIR, "cat2.jpg")
-        self.bill_photo = Image.open(image_path)
-        self.bill_photo = self.bill_photo.resize((450, 300))
-        self.bill_photo = ImageTk.PhotoImage(self.bill_photo)
+        self.images, self.labels = load_and_place_images(self.root, image_layout)
+        #self.bill_photo = Image.open(IMG_CAT2)
+        #self.bill_photo = self.bill_photo.resize((450, 300))
+        #self.bill_photo = ImageTk.PhotoImage(self.bill_photo)
 
-        lbl_image = Label(self.root, image=self.bill_photo, bd=0)
-        lbl_image.place(x=700, y=110)
+        #lbl_image = Label(self.root, image=self.bill_photo, bd=0)
+        #lbl_image.place(x=700, y=110)
+
+
 
         self.show()
 

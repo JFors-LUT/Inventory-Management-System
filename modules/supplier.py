@@ -1,7 +1,9 @@
 from tkinter import*
-#from PIL import Image,ImageTk
+from PIL import Image,ImageTk
 from tkinter import ttk,messagebox
 import sqlite3
+from data.db.db_helper import db_connect
+from ui.ui_styles import FONT_GENERAL, FONT_TITLE_LBL
 
 class supplierClass:
     def __init__(self,root):
@@ -20,38 +22,38 @@ class supplierClass:
         
         
         #---------- Search Frame -------------
-        lbl_search=Label(self.root,text="Invoice No.",bg="white",font=("goudy old style",15))
+        lbl_search=Label(self.root,text="Invoice No.",bg="white",font=FONT_GENERAL)
         lbl_search.place(x=700,y=80)
 
-        txt_search=Entry(self.root,textvariable=self.var_searchtxt,font=("goudy old style",15),bg="lightyellow").place(x=850,y=80,width=160)
-        btn_search=Button(self.root,command=self.search,text="Search",font=("goudy old style",15),bg="#4caf50",fg="white",cursor="hand2").place(x=980,y=79,width=100,height=28)
+        txt_search=Entry(self.root,textvariable=self.var_searchtxt,font=FONT_GENERAL,bg="lightyellow").place(x=850,y=80,width=160)
+        btn_search=Button(self.root,command=self.search,text="Search",font=FONT_GENERAL,bg="#4caf50",fg="white",cursor="hand2").place(x=980,y=79,width=100,height=28)
 
         #-------------- title ---------------
-        title=Label(self.root,text="Supplier Details",font=("goudy old style",20,"bold"),bg="#0f4d7d",fg="white").place(x=50,y=10,width=1000,height=40)
+        title=Label(self.root,text="Supplier Details",font=(FONT_TITLE_LBL),bg="#0f4d7d",fg="white").place(x=50,y=10,width=1000,height=40)
 
         #-------------- content ---------------
         #---------- row 1 ----------------
-        lbl_supplier_invoice=Label(self.root,text="Invoice No.",font=("goudy old style",15),bg="white").place(x=50,y=80)
-        txt_supplier_invoice=Entry(self.root,textvariable=self.var_sup_invoice,font=("goudy old style",15),bg="lightyellow").place(x=180,y=80,width=180)
+        lbl_supplier_invoice=Label(self.root,text="Invoice No.",font=FONT_GENERAL,bg="white").place(x=50,y=80)
+        txt_supplier_invoice=Entry(self.root,textvariable=self.var_sup_invoice,font=FONT_GENERAL,bg="lightyellow").place(x=180,y=80,width=180)
         
         #---------- row 2 ----------------
-        lbl_name=Label(self.root,text="Name",font=("goudy old style",15),bg="white").place(x=50,y=120)
-        txt_name=Entry(self.root,textvariable=self.var_name,font=("goudy old style",15),bg="lightyellow").place(x=180,y=120,width=180)
+        lbl_name=Label(self.root,text="Name",font=FONT_GENERAL,bg="white").place(x=50,y=120)
+        txt_name=Entry(self.root,textvariable=self.var_name,font=FONT_GENERAL,bg="lightyellow").place(x=180,y=120,width=180)
         
         #---------- row 3 ----------------
-        lbl_contact=Label(self.root,text="Contact",font=("goudy old style",15),bg="white").place(x=50,y=160)
-        txt_contact=Entry(self.root,textvariable=self.var_contact,font=("goudy old style",15),bg="lightyellow").place(x=180,y=160,width=180)
+        lbl_contact=Label(self.root,text="Contact",font=FONT_GENERAL,bg="white").place(x=50,y=160)
+        txt_contact=Entry(self.root,textvariable=self.var_contact,font=FONT_GENERAL,bg="lightyellow").place(x=180,y=160,width=180)
         
         #---------- row 4 ----------------
-        lbl_desc=Label(self.root,text="Description",font=("goudy old style",15),bg="white").place(x=50,y=200)
-        self.txt_desc=Text(self.root,font=("goudy old style",15),bg="lightyellow")
+        lbl_desc=Label(self.root,text="Description",font=FONT_GENERAL,bg="white").place(x=50,y=200)
+        self.txt_desc=Text(self.root,font=FONT_GENERAL,bg="lightyellow")
         self.txt_desc.place(x=180,y=200,width=470,height=120)
         
         #-------------- buttons -----------------
-        btn_add=Button(self.root,text="Save",command=self.add,font=("goudy old style",15),bg="#2196f3",fg="white",cursor="hand2").place(x=180,y=370,width=110,height=35)
-        btn_update=Button(self.root,text="Update",command=self.update,font=("goudy old style",15),bg="#4caf50",fg="white",cursor="hand2").place(x=300,y=370,width=110,height=35)
-        btn_delete=Button(self.root,text="Delete",command=self.delete,font=("goudy old style",15),bg="#f44336",fg="white",cursor="hand2").place(x=420,y=370,width=110,height=35)
-        btn_clear=Button(self.root,text="Clear",command=self.clear,font=("goudy old style",15),bg="#607d8b",fg="white",cursor="hand2").place(x=540,y=370,width=110,height=35)
+        btn_add=Button(self.root,text="Save",command=self.add,font=FONT_GENERAL,bg="#2196f3",fg="white",cursor="hand2").place(x=180,y=370,width=110,height=35)
+        btn_update=Button(self.root,text="Update",command=self.update,font=FONT_GENERAL,bg="#4caf50",fg="white",cursor="hand2").place(x=300,y=370,width=110,height=35)
+        btn_delete=Button(self.root,text="Delete",command=self.delete,font=FONT_GENERAL,bg="#f44336",fg="white",cursor="hand2").place(x=420,y=370,width=110,height=35)
+        btn_clear=Button(self.root,text="Clear",command=self.clear,font=FONT_GENERAL,bg="#607d8b",fg="white",cursor="hand2").place(x=540,y=370,width=110,height=35)
 
         #------------ supplier details -------------
         sup_frame=Frame(self.root,bd=3,relief=RIDGE)
@@ -80,8 +82,8 @@ class supplierClass:
         self.show()
 #-----------------------------------------------------------------------------------------------------
     def add(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
         try:
             if self.var_sup_invoice.get()=="":
                 messagebox.showerror("Error","Invoice must be required",parent=self.root)
@@ -103,10 +105,11 @@ class supplierClass:
                     self.show()
         except Exception as ex:
             messagebox.showerror("Error",f"Error due to : {str(ex)}")
+            
 
     def show(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
         try:
             cur.execute("select * from supplier")
             rows=cur.fetchall()
@@ -127,8 +130,8 @@ class supplierClass:
         self.txt_desc.insert(END,row[3])
 
     def update(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
         try:
             if self.var_sup_invoice.get()=="":
                 messagebox.showerror("Error","Invoice must be required",parent=self.root)
@@ -151,8 +154,8 @@ class supplierClass:
             messagebox.showerror("Error",f"Error due to : {str(ex)}")
 
     def delete(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
         try:
             if self.var_sup_invoice.get()=="":
                 messagebox.showerror("Error","Invoice No. must be required",parent=self.root)
@@ -180,8 +183,8 @@ class supplierClass:
         self.show()
 
     def search(self):
-        con=sqlite3.connect(database=r'ims.db')
-        cur=con.cursor()
+        con = db_connect()
+        cur = con.cursor()
         try:
             if self.var_searchtxt.get()=="":
                 messagebox.showerror("Error","Invoice No. should be required",parent=self.root)
