@@ -1,23 +1,35 @@
 from tkinter import*
 from PIL import Image,ImageTk
-from tkinter import ttk,messagebox
+from tkinter import ttk
 import sqlite3
-from data.db.db_helper import db_connect
+from db.db_helper import db_connect, run_query
 from ui.ui_styles import FONT_GENERAL, FONT_PRODUCT_TITLE, APP_FONT
+from ui.ui_utility import msg_manager, format_table, BaseWindow
 
-class productClass:
+class productClass(BaseWindow):
     def __init__(self,root):
         self.root=root
-        self.root.geometry("1100x500+320+220")
-        self.root.config(bg="white")
-        self.root.resizable(False,False)
-        self.root.focus_force()
+        self.setup_window("1100x500+320+220")
+
+        self.init_vars()
+
+        self.build_table()
+        self.fetch_cat_sup()
+        
+        self.build_form()
+        self.build_search()
+        
+
+        
+        self.show()
         #---------------------------------------
+
         #----------- variables -------------
+    def init_vars(self):
         self.var_cat=StringVar()
         self.cat_list=[]
         self.sup_list=[]
-        self.fetch_cat_sup()
+
         self.var_pid=StringVar()
         self.var_sup=StringVar()
         self.var_name=StringVar()
@@ -31,81 +43,86 @@ class productClass:
         product_Frame.place(x=10,y=10,width=450,height=480)
 
         #------------ title --------------
-        title=Label(product_Frame,text="Manage Product Details",font=(FONT_PRODUCT_TITLE),bg="#0f4d7d",fg="white").pack(side=TOP,fill=X)
+    def build_form(self):
+        frame = Frame(self.root, 
+            bd=2, 
+            relief=RIDGE, 
+            bg="white")
+        frame.place(x=10, y=10, width=450, height=480)
 
-        lbl_category=Label(product_Frame,text="Category",font=(FONT_PRODUCT_TITLE),bg="white").place(x=30,y=60)
-        lbl_supplier=Label(product_Frame,text="Supplier",font=(FONT_PRODUCT_TITLE),bg="white").place(x=30,y=110)
-        lbl_product_name=Label(product_Frame,text="Name",font=(FONT_PRODUCT_TITLE),bg="white").place(x=30,y=160)
-        lbl_price=Label(product_Frame,text="Price",font=(FONT_PRODUCT_TITLE),bg="white").place(x=30,y=210)
-        lbl_qty=Label(product_Frame,text="Quantity",font=(FONT_PRODUCT_TITLE),bg="white").place(x=30,y=260)
-        lbl_status=Label(product_Frame,text="Status",font=(FONT_PRODUCT_TITLE),bg="white").place(x=30,y=310)
+        Label(frame, text="Manage Product Details",
+              font=FONT_PRODUCT_TITLE, 
+              bg="#0f4d7d",
+              fg="white").pack(side=TOP, fill=X)
 
-        cmb_cat=ttk.Combobox(product_Frame,textvariable=self.var_cat,values=self.cat_list,state='readonly',justify=CENTER,font=FONT_GENERAL)
-        cmb_cat.place(x=150,y=60,width=200)
-        cmb_cat.current(0)
+        #-------------- Field config --------------
+        fields = [
+            ("Category", self.var_cat, self.cat_list, 60),
+            ("Supplier", self.var_sup, self.sup_list, 110),
+            ("Name", self.var_name, None, 160),
+            ("Price", self.var_price, None, 210),
+            ("Quantity", self.var_qty, None, 260),
+            ("Status", self.var_status, ["Active", "Inactive"], 310),
+        ]
+        #--------------  Button config --------------
+        actions = [
+            ("Save", self.add, "#2196f3"),
+            ("Update", self.update, "#4caf50"),
+            ("Delete", self.delete, "#f44336"),
+            ("Clear", self.clear, "#607d8b"),
+        ]
+        #-------------- Field setup --------------
+        for label, var, values, y in fields:
+            Label(frame, text=label, font=FONT_PRODUCT_TITLE,
+                  bg="white").place(x=30, y=y)
 
-        cmb_sup=ttk.Combobox(product_Frame,textvariable=self.var_sup,values=self.sup_list,state='readonly',justify=CENTER,font=FONT_GENERAL)
-        cmb_sup.place(x=150,y=110,width=200)
-        cmb_sup.current(0)
+            if values:
+                ttk.Combobox(frame, textvariable=var,
+                             values=values, state='readonly',
+                             justify=CENTER,
+                             font=FONT_GENERAL).place(x=150, y=y, width=200)
+            else:
+                Entry(frame, textvariable=var,
+                      font=FONT_GENERAL,
+                      bg="lightyellow").place(x=150, y=y, width=200)
 
-        txt_name=Entry(product_Frame,textvariable=self.var_name,font=FONT_GENERAL,bg="lightyellow").place(x=150,y=160,width=200)
-        txt_price=Entry(product_Frame,textvariable=self.var_price,font=FONT_GENERAL,bg="lightyellow").place(x=150,y=210,width=200)
-        txt_qty=Entry(product_Frame,textvariable=self.var_qty,font=FONT_GENERAL,bg="lightyellow").place(x=150,y=260,width=200)
-
-        cmb_status=ttk.Combobox(product_Frame,textvariable=self.var_status,values=("Active","Inactive"),state='readonly',justify=CENTER,font=FONT_GENERAL)
-        cmb_status.place(x=150,y=310,width=200)
-        cmb_status.current(0)
-
-        #-------------- buttons -----------------
-        btn_add=Button(product_Frame,text="Save",command=self.add,font=FONT_GENERAL,bg="#2196f3",fg="white",cursor="hand2").place(x=10,y=400,width=100,height=40)
-        btn_update=Button(product_Frame,text="Update",command=self.update,font=FONT_GENERAL,bg="#4caf50",fg="white",cursor="hand2").place(x=120,y=400,width=100,height=40)
-        btn_delete=Button(product_Frame,text="Delete",command=self.delete,font=FONT_GENERAL,bg="#f44336",fg="white",cursor="hand2").place(x=230,y=400,width=100,height=40)
-        btn_clear=Button(product_Frame,text="Clear",command=self.clear,font=FONT_GENERAL,bg="#607d8b",fg="white",cursor="hand2").place(x=340,y=400,width=100,height=40)
+        #-------------- button setup -----------------
+        btn_x_offset = 10
+        for text, cmd, color in actions:
+            Button(frame, text=text, command=cmd,
+                   font=FONT_GENERAL, bg=color, fg="white",
+                   cursor="hand2").place(x=btn_x_offset, y=400, width=100, height=40)
+            btn_x_offset += 110
 
         #---------- Search Frame -------------
-        SearchFrame=LabelFrame(self.root,text="Search Product",font=(APP_FONT,12,"bold"),bd=2,relief=RIDGE,bg="white")
-        SearchFrame.place(x=480,y=10,width=600,height=80)
+    def build_search(self):
+        frame = LabelFrame(self.root, text="Search Product",
+                           font=(APP_FONT, 12, "bold"),
+                           bd=2, relief=RIDGE, bg="white")
+        frame.place(x=480, y=10, width=600, height=80)
 
-        #------------ options ----------------
-        cmb_search=ttk.Combobox(SearchFrame,textvariable=self.var_searchby,values=("Select","Category","Supplier","Name"),state='readonly',justify=CENTER,font=FONT_GENERAL)
-        cmb_search.place(x=10,y=10,width=180)
-        cmb_search.current(0)
+        ttk.Combobox(frame, textvariable=self.var_searchby,
+                     values=("Select", "category", "supplier", "name"),
+                     state='readonly', justify=CENTER,
+                     font=FONT_GENERAL).place(x=10, y=10, width=180)
 
-        txt_search=Entry(SearchFrame,textvariable=self.var_searchtxt,font=FONT_GENERAL,bg="lightyellow").place(x=200,y=10)
-        btn_search=Button(SearchFrame,text="Search",command=self.search,font=FONT_GENERAL,bg="#4caf50",fg="white",cursor="hand2").place(x=410,y=9,width=150,height=30)
+        Entry(frame, textvariable=self.var_searchtxt,
+              font=FONT_GENERAL, bg="lightyellow").place(x=200, y=10)
+
+        Button(frame, text="Search", command=self.search,
+               font=FONT_GENERAL, bg="#4caf50",
+               fg="white", cursor="hand2").place(x=410, y=9, width=150, height=30)
 
         #------------ product details -------------
-        product_frame=Frame(self.root,bd=3,relief=RIDGE)
-        product_frame.place(x=480,y=100,width=600,height=390)
+    def build_table(self):
+        frame = Frame(self.root, bd=3, relief=RIDGE)
+        frame.place(x=480, y=100, width=600, height=390)
 
-        scrolly=Scrollbar(product_frame,orient=VERTICAL)
-        scrollx=Scrollbar(product_frame,orient=HORIZONTAL)\
-        
-        self.ProductTable=ttk.Treeview(product_frame,columns=("pid","Category","Supplier","name","price","qty","status"),yscrollcommand=scrolly.set,xscrollcommand=scrollx.set)
-        scrollx.pack(side=BOTTOM,fill=X)
-        scrolly.pack(side=RIGHT,fill=Y)
-        scrollx.config(command=self.ProductTable.xview)
-        scrolly.config(command=self.ProductTable.yview)
-        self.ProductTable.heading("pid",text="P ID")
-        self.ProductTable.heading("Category",text="Category")
-        self.ProductTable.heading("Supplier",text="Suppler")
-        self.ProductTable.heading("name",text="Name")
-        self.ProductTable.heading("price",text="Price")
-        self.ProductTable.heading("qty",text="Quantity")
-        self.ProductTable.heading("status",text="Status")
-        self.ProductTable["show"]="headings"
-        self.ProductTable.column("pid",width=90)
-        self.ProductTable.column("Category",width=100)
-        self.ProductTable.column("Supplier",width=100)
-        self.ProductTable.column("name",width=100)
-        self.ProductTable.column("price",width=100)
-        self.ProductTable.column("qty",width=100)
-        self.ProductTable.column("status",width=100)
-        
-        self.ProductTable.pack(fill=BOTH,expand=1)
-        self.ProductTable.bind("<ButtonRelease-1>",self.get_data)
-        self.show()
-        self.fetch_cat_sup()
+        columns = ("pid", "category", "supplier", "name", "price", "qty", "status")
+        names = ("P ID", "Category", "Supplier", "Name", "Price", "Quantity", "Status")
+        widths = [90]+[100] * (len(columns)-1) 
+        self.ProductTable = format_table(frame, columns, names, widths)
+        self.ProductTable.bind("<ButtonRelease-1>", self.get_data)
 #-----------------------------------------------------------------------------------------------------
     def fetch_cat_sup(self):
         self.cat_list.append("Empty")
@@ -117,59 +134,73 @@ class productClass:
             cat=cur.fetchall()
             if len(cat)>0:
                 del self.cat_list[:]
-                self.cat_list.append("Select")
                 for i in cat:
                     self.cat_list.append(i[0])
             cur.execute("select name from supplier")
             sup=cur.fetchall()
             if len(sup)>0:
                 del self.sup_list[:]
-                self.sup_list.append("Select")
                 for i in sup:
                     self.sup_list.append(i[0])
+            self.clear()
+            self.show()
         except Exception as ex:
-            messagebox.showerror("Error",f"Error due to : {str(ex)}")
+            msg_manager("Error",f"Error due to : {str(ex)}", self)
+        finally:
+            con.close()
 
-    
     
     def add(self):
-        con = db_connect()
-        cur = con.cursor()
-        try:
-            if self.var_cat.get()=="Select" or self.var_cat.get()=="Empty" or self.var_sup=="Select" or self.var_sup=="Empty":
-                messagebox.showerror("Error","All fields are required",parent=self.root)
-            else:
-                cur.execute("Select * from product where name=?",(self.var_name.get(),))
-                row=cur.fetchone()
-                if row!=None:
-                    messagebox.showerror("Error","Product already present",parent=self.root)
-                else:
-                    cur.execute("insert into product(Category,Supplier,name,price,qty,status) values(?,?,?,?,?,?)",(
-                        self.var_cat.get(),
-                        self.var_sup.get(),
-                        self.var_name.get(),
-                        self.var_price.get(),
-                        self.var_qty.get(),
-                        self.var_status.get(),
-                    ))
-                    con.commit()
-                    messagebox.showinfo("Success","Product Added Successfully",parent=self.root)
-                    self.clear()
-                    self.show()
-        except Exception as ex:
-            messagebox.showerror("Error",f"Error due to : {str(ex)}")
+        print(self.var_name.get().strip()=="")
+        print(self.var_name.get().strip()==" ")
+        if self.var_cat.get()=="Select" or self.var_cat.get()=="Empty" or self.var_sup.get()=="Select" or self.var_sup.get()=="Empty":
+                msg_manager("Error", "All fields are required", self)
+                return        
+        if self.var_name.get().strip()=="" or self.var_price.get().strip()=="" or self.var_qty.get().strip()=="":
+                msg_manager("Error", "All fields are required", self)
+                return
+        
+        if not self.var_price.get().isdigit() or not self.var_qty.get().isdigit():
+                msg_manager("Error", "Price and Quantity should be numbers", self)
+                return
+
+        # Check if product exists
+        result = run_query(("SELECT * FROM product WHERE name=?", (self.var_name.get(),)), fetch=True)
+        if not result["ok"]:
+            msg_manager("Error", f"Error due to: {result['error']}", self)
+            return
+        if result["data"]:
+            msg_manager("Error", "Product already present", self)
+            return
+
+        # Insert new product
+        insert_result = run_query((
+            "INSERT INTO product(Category,Supplier,name,price,qty,status) VALUES (?,?,?,?,?,?)",
+            (
+                self.var_cat.get(),
+                self.var_sup.get(),
+                self.var_name.get(),
+                self.var_price.get(),
+                self.var_qty.get(),
+                self.var_status.get(),
+            )
+        ))
+        if insert_result["ok"]:
+            msg_manager("Success", "Product Added Successfully", self)
+            self.clear()
+            self.show()
+        else:
+            msg_manager("Error", f"Error due to: {insert_result['error']}", self)
+
 
     def show(self):
-        con = db_connect()
-        cur = con.cursor()
-        try:
-            cur.execute("select * from product")
-            rows=cur.fetchall()
+        result = run_query(("SELECT * FROM product", ()), fetch=True)
+        if result["ok"]:
             self.ProductTable.delete(*self.ProductTable.get_children())
-            for row in rows:
-                self.ProductTable.insert('',END,values=row)
-        except Exception as ex:
-            messagebox.showerror("Error",f"Error due to : {str(ex)}")
+            for row in result["data"]:
+                self.ProductTable.insert('', END, values=row)
+        else:
+            msg_manager("Error", f"Error due to: {result['error']}", self)
 
     def get_data(self,ev):
         f=self.ProductTable.focus()
@@ -183,53 +214,64 @@ class productClass:
         self.var_qty.set(row[5])
         self.var_status.set(row[6])
 
+
     def update(self):
-        con = db_connect()
-        cur = con.cursor()
-        try:
-            if self.var_pid.get()=="":
-                messagebox.showerror("Error","Please select product from list",parent=self.root)
-            else:
-                cur.execute("Select * from product where pid=?",(self.var_pid.get(),))
-                row=cur.fetchone()
-                if row==None:
-                    messagebox.showerror("Error","Invalid Product",parent=self.root)
-                else:
-                    cur.execute("update product set Category=?,Supplier=?,name=?,price=?,qty=?,status=? where pid=?",(
-                        self.var_cat.get(),
-                        self.var_sup.get(),
-                        self.var_name.get(),
-                        self.var_price.get(),
-                        self.var_qty.get(),
-                        self.var_status.get(),
-                        self.var_pid.get(),
-                    ))
-                    con.commit()
-                    messagebox.showinfo("Success","Product Updated Successfully",parent=self.root)
-                    self.show()
-        except Exception as ex:
-            messagebox.showerror("Error",f"Error due to : {str(ex)}")
+        if not self.var_pid.get():
+            msg_manager("Error", "Please select product from list", self)
+            return
+
+        # Check if product exists
+        result = run_query(("SELECT * FROM product WHERE pid=?", (self.var_pid.get(),)), fetch=True)
+        if not result["ok"]:
+            msg_manager("Error", f"Error due to: {result['error']}", self)
+            return
+        if not result["data"]:
+            msg_manager("Error", "Invalid Product", self)
+            return
+
+        # Update product
+        update_result = run_query((
+            "UPDATE product SET Category=?, Supplier=?, name=?, price=?, qty=?, status=? WHERE pid=?",
+            (
+                self.var_cat.get(),
+                self.var_sup.get(),
+                self.var_name.get(),
+                self.var_price.get(),
+                self.var_qty.get(),
+                self.var_status.get(),
+                self.var_pid.get(),
+            )
+        ))
+        if update_result["ok"]:
+            msg_manager("Success", "Product Updated Successfully", self)
+            self.show()
+        else:
+            msg_manager("Error", f"Error due to: {update_result['error']}", self)
+
 
     def delete(self):
-        con = db_connect()
-        cur = con.cursor()
-        try:
-            if self.var_pid.get()=="":
-                messagebox.showerror("Error","Select Product from the list",parent=self.root)
+        if not self.var_pid.get():
+            msg_manager("Error", "Select Product from the list", self)
+            return
+
+        # Check if product exists
+        result = run_query(("SELECT * FROM product WHERE pid=?", (self.var_pid.get(),)), fetch=True)
+        if not result["ok"]:
+            msg_manager("Error", f"Error due to: {result['error']}", self)
+            return
+        if not result["data"]:
+            msg_manager("Error", "Invalid Product", self)
+            return
+
+        # Confirm deletion
+        if msg_manager("Confirm", "Do you really want to delete?", self):
+            delete_result = run_query(("DELETE FROM product WHERE pid=?", (self.var_pid.get(),)))
+            if delete_result["ok"]:
+                msg_manager("Delete", "Product Deleted Successfully", self)
+                self.clear()
             else:
-                cur.execute("Select * from product where pid=?",(self.var_pid.get(),))
-                row=cur.fetchone()
-                if row==None:
-                    messagebox.showerror("Error","Invalid Product",parent=self.root)
-                else:
-                    op=messagebox.askyesno("Confirm","Do you really want to delete?",parent=self.root)
-                    if op==True:
-                        cur.execute("delete from product where pid=?",(self.var_pid.get(),))
-                        con.commit()
-                        messagebox.showinfo("Delete","Product Deleted Successfully",parent=self.root)
-                        self.clear()
-        except Exception as ex:
-            messagebox.showerror("Error",f"Error due to : {str(ex)}")
+                msg_manager("Error", f"Error due to: {delete_result['error']}", self)
+
 
     def clear(self):
         self.var_cat.set("Select")
@@ -243,27 +285,27 @@ class productClass:
         self.var_searchtxt.set("")
         self.show()
 
-    
-    def search(self):
-        con = db_connect()
-        cur = con.cursor()
-        try:
-            if self.var_searchby.get()=="Select":
-                messagebox.showerror("Error","Select Search By option",parent=self.root)
-            elif self.var_searchtxt.get()=="":
-                messagebox.showerror("Error","Search input should be required",parent=self.root)
-            else:
-                cur.execute("select * from product where "+self.var_searchby.get()+" LIKE '%"+self.var_searchtxt.get()+"%'")
-                rows=cur.fetchall()
-                if len(rows)!=0:
-                    self.ProductTable.delete(*self.ProductTable.get_children())
-                    for row in rows:
-                        self.ProductTable.insert('',END,values=row)
-                else:
-                    messagebox.showerror("Error","No record found!!!",parent=self.root)
-        except Exception as ex:
-            messagebox.showerror("Error",f"Error due to : {str(ex)}")
 
+    def search(self):
+        if self.var_searchby.get() == "Select":
+            msg_manager("Error", "Select Search By option", self)
+            return
+        if not self.var_searchtxt.get():
+            msg_manager("Error", "Search input should be required", self)
+            return
+
+        sql = f"SELECT * FROM product WHERE {self.var_searchby.get()} LIKE ?"
+        pattern = f"%{self.var_searchtxt.get()}%"
+        result = run_query((sql, (pattern,)), fetch=True)
+        if result["ok"]:
+            if result["data"]:
+                self.ProductTable.delete(*self.ProductTable.get_children())
+                for row in result["data"]:
+                    self.ProductTable.insert('', END, values=row)
+            else:
+                msg_manager("Error", "No record found!!!", self)
+        else:
+            msg_manager("Error", f"Error due to: {result['error']}", self)
 if __name__=="__main__":
     root=Tk()
     obj=productClass(root)

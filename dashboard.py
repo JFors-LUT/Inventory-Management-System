@@ -1,37 +1,42 @@
 from tkinter import *
 from PIL import Image, ImageTk
-from tkinter import messagebox
 import time
 import sqlite3
 import os
 from config import IMAGE_DIR, BILL_DIR
 
-from ui.ui_utility import load_image
+from ui.ui_utility import load_image, msg_manager, BaseWindow
 from ui.ui_styles import BUTTON_MENU, FONT_TITLE_LBL, MENU_FONT, LABEL_CARD
 
-from data.db.db_helper import db_connect
+from db.db_helper import db_connect
 from modules.employee import employeeClass
 from modules.supplier import supplierClass
 from modules.category import categoryClass
 from modules.product import productClass
 from modules.sales import salesClass
 
-#dashboard images
-IMG_LOGO = os.path.join(IMAGE_DIR, "logo1.png")
-IMG_MENU = os.path.join(IMAGE_DIR, "menu_im.png")
-IMG_SIDE = os.path.join(IMAGE_DIR, "side.png")
 
 
-
-class IMS:
+class IMS(BaseWindow):
     def __init__(self, root):
         self.root = root
-        self.root.geometry("1350x700+110+80")
-        self.root.resizable(False, False)
-        self.root.config(bg="white")
+        self.setup_window("1350x700+110+80")
 
-        #------------- Data items -------------
-        dashboard_cards = {
+        self.init_data()
+        self.build_header()
+        self.build_menu()
+        self.build_dashboard()
+        self.build_footer()
+
+        self.update_content()
+
+    def init_data(self):
+        #dashboard images
+        self.IMG_LOGO = os.path.join(IMAGE_DIR, "logo1.png")
+        self.IMG_MENU = os.path.join(IMAGE_DIR, "menu_im.png")
+        self.IMG_SIDE = os.path.join(IMAGE_DIR, "side.png")
+
+        self.dashboard_cards = {
             "product": {"text": "Total Product\n{ 0 }", "bg": "#607d8b", "pos": (300, 300)},
             "category": {"text": "Total Category\n{ 0 }", "bg": "#009688", "pos": (1000, 120)},
             "employee": {"text": "Total Employee\n{ 0 }", "bg": "#33bbf9", "pos": (300, 120)},
@@ -39,7 +44,7 @@ class IMS:
             "sales": {"text": "Total Sales\n{ 0 }", "bg": "#ffc107", "pos": (650, 300)}
         }
 
-        buttons = [
+        self.buttons = [
             ("Employee", self.employee),
             ("Supplier", self.supplier),
             ("Category", self.category),
@@ -48,82 +53,85 @@ class IMS:
             ("Exit", self.root.destroy)
         ]
 
+
+    def build_header(self):
+        self.icon_title = load_image(self.IMG_LOGO)
         # ------------- title --------------
-        # optional reseize 
-        self.icon_title = load_image(IMG_LOGO)
-        title = Label(
+        self.title_lbl = Label(
             self.root,
             text="Inventory Management System",
             image=self.icon_title,
             compound=LEFT,
-            font=(FONT_TITLE_LBL),
+            font=FONT_TITLE_LBL,
             bg="#010c48",
             fg="white",
             anchor="w",
             padx=20
-        ).place(x=0, y=0, relwidth=1, height=70)
+        )
+        self.title_lbl.place(x=0, y=0, relwidth=1, height=70)
 
         # ------------ logout button -----------
-        btn_logout = Button(
-            self.root, text="Logout",
+        self.btn_logout = Button(
+            self.root,
+            text="Logout",
             font=(MENU_FONT, 15, "bold"),
-            bg="yellow", cursor="hand2"
-        ).place(x=1150, y=10, height=50, width=150)
+            bg="yellow",
+            cursor="hand2"
+        )
+        self.btn_logout.place(x=1150, y=10, height=50, width=150)
 
         # ------------ clock -----------------
         self.lbl_clock = Label(
             self.root,
-            text="Welcome to Inventory Management System\t\t Date: DD:MM:YYYY\t\t Time: HH:MM:SS",
+            text="Welcome to IMS...",
             font=(MENU_FONT, 15),
-            bg="#4d636d", fg="white"
+            bg="#4d636d",
+            fg="white"
         )
         self.lbl_clock.place(x=0, y=70, relwidth=1, height=30)
 
         # ---------------- left menu ---------------
-        self.MenuLogo = load_image(IMG_MENU, (200, 200))
+    def build_menu(self):
+        frame = Frame(self.root, bd=2, relief=RIDGE, bg="white")
+        frame.place(x=0, y=102, width=200, height=565)
 
-        LeftMenu = Frame(self.root, bd=2, relief=RIDGE, bg="white")
-        LeftMenu.place(x=0, y=102, width=200, height=565)
+        self.MenuLogo = load_image(self.IMG_MENU, (200, 200))
+        self.icon_side = PhotoImage(file=self.IMG_SIDE)
+        Label(frame, image=self.MenuLogo).pack(side=TOP, fill=X)
 
-        lbl_menuLogo = Label(LeftMenu, image=self.MenuLogo)
-        lbl_menuLogo.pack(side=TOP, fill=X)
-
-        lbl_menu = Label(
-            LeftMenu, text="Menu",
-            font=(MENU_FONT, 20),
+        self.lbl_menu = Label(frame, 
+            text="Menu", 
+            font=(MENU_FONT, 20), 
             bg="#009688"
-        ).pack(side=TOP, fill=X)
+        )
+        self.lbl_menu.pack(side=TOP, fill=X)
 
-        self.icon_side = PhotoImage(file=IMG_SIDE)
-
-        # menu navigation buttons
-        for text, cmd in buttons:
-            Button(
-                LeftMenu,
-                text=text,
-                command=cmd,
-                image=self.icon_side,
+        for text, cmd in self.buttons:
+            Button(frame, 
+                text=text, 
+                command=cmd, 
+                image=self.icon_side, 
                 **BUTTON_MENU
             ).pack(side=TOP, fill=X)
 
-       # ----------- content ----------------
+        # ----------- content ----------------
+    def build_dashboard(self):
         self.cards = {}
 
-        for key, config in dashboard_cards.items():
+        for key, config in self.dashboard_cards.items():
             lbl = Label(self.root, text=config["text"], bg=config["bg"], **LABEL_CARD)
             lbl.place(x=config["pos"][0], y=config["pos"][1], height=150, width=300)
             self.cards[key] = lbl
 
-
         # ------------ footer -----------------
-        lbl_footer = Label(
+    def build_footer(self):
+        self.lbl_footer = Label(
             self.root,
             text="IMS-Inventory Management System",
             font=(MENU_FONT, 12),
             bg="#4d636d", fg="white"
-        ).pack(side=BOTTOM, fill=X)
-
-        self.update_content()
+        )
+        self.lbl_footer.pack(side=BOTTOM, fill=X)
 
     # -------------- functions ----------------
     def employee(self):
@@ -152,9 +160,6 @@ class IMS:
         cur = con.cursor()
 
         try:
-            #cur.execute("select * from product")
-            #product = cur.fetchall()
-            #self.cards["product"].config(text=f"Total Product\n[ {len(product)} ]")
             cur.execute("select count (*) from product")
             product = cur.fetchall()
             self.cards["product"].config(text=f"Total Product\n[ {product[0][0]} ]")
@@ -183,7 +188,10 @@ class IMS:
             self.lbl_clock.after(200, self.update_content)
 
         except Exception as ex:
-            messagebox.showerror("Error", f"Error due to : {str(ex)}", parent=self.root)
+            msg_manager("Error",f"Error due to : {str(ex)}", self)
+        
+        finally:
+            con.close()
 
 
 if __name__ == "__main__":

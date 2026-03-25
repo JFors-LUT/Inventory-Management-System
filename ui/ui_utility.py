@@ -1,7 +1,16 @@
 import os
 from PIL import Image, ImageTk
 from config import IMAGE_DIR
-from tkinter import Label, RAISED, FLAT
+from tkinter import Label, RAISED, FLAT, messagebox
+from tkinter import ttk, Scrollbar, VERTICAL, HORIZONTAL, BOTTOM, RIGHT, BOTH, X, Y
+
+class BaseWindow:
+    def setup_window(self, geometry, bg="white", resizable=False, focus=True):
+        self.root.geometry(geometry)
+        self.root.config(bg=bg)
+        self.root.resizable(resizable, resizable)
+        if focus:
+            self.root.focus_force()
 
 def load_image(image_path, size=None):
     image = Image.open(image_path)
@@ -30,3 +39,42 @@ def load_and_place_images(root, image_layout):
         images[key] = img     
         labels[key] = lbl
     return images, labels
+
+
+def msg_manager(type, msg, self):
+    if type == "Error":
+        messagebox.showerror("Error", msg, parent=self.root)
+        return       
+    elif type == "Confirm":
+        choice = messagebox.askyesno("Confirm", msg, parent=self.root)
+        return choice
+    else:
+        messagebox.showinfo(type, msg, parent=self.root)
+        return
+
+def setup_window(self):
+    self.root.geometry("1350x700+110+80")
+    self.root.resizable(False, False)
+    self.root.config(bg="white")
+
+def format_table(frame, columns, names, widths, show="headings", ):
+
+    newTable = ttk.Treeview(frame, columns=columns, show=show)
+    i = 0
+    for col in columns:
+        newTable.heading(col, text=names[i])
+        newTable.column(col, width=widths[i])
+        i += 1
+    scrolly = Scrollbar(frame, orient=VERTICAL, command=newTable.yview)
+    scrollx = Scrollbar(frame, orient=HORIZONTAL, command=newTable.xview)
+    newTable.configure(
+        yscrollcommand=scrolly.set, 
+        xscrollcommand=scrollx.set)
+        
+
+
+    scrollx.pack(side=BOTTOM, fill=X)
+    scrolly.pack(side=RIGHT, fill=Y)
+    newTable.pack(fill=BOTH, expand=1)        
+
+    return newTable

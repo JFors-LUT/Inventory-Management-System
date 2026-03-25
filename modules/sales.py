@@ -1,35 +1,40 @@
 from tkinter import *
-from PIL import Image, ImageTk
-from tkinter import ttk, messagebox
-#import sqlite3
 import os
-#from data.db.db_helper import db_connect
 from config import IMAGE_DIR, BILL_DIR
-from ui.ui_utility import *
+from ui.ui_utility import msg_manager, BaseWindow, load_and_place_images
 from ui.ui_styles import FONT_GENERAL, FONT_SALES_BTN, APP_FONT
 
 #sales images
 IMG_CAT2 = os.path.join(IMAGE_DIR, "cat2.jpg")
 
-class salesClass:
+class salesClass(BaseWindow):
     def __init__(self, root):
         self.root = root
-        self.root.geometry("1100x500+320+220")
-        self.root.config(bg="white")
-        self.root.resizable(False, False)
-        self.root.focus_force()
-
-        self.blll_list = []
-        self.var_invoice = StringVar()
-
+        self.setup_window("1100x500+320+220")
         #--------- image data ------
+        self.image_layout = {
+            "img1": {"path": IMG_CAT2, "pos": (700, 110), "resize": (450, 300), 
+                     "border": 0, "relief": "flat" },
+  }
+        self.init_vars()
+        self.build_title()
+        self.build_search()
+        self.build_list()
+        self.build_bill_area()
+        self.build_images()
 
-        image_layout = {
-            "img1": {"path": IMG_CAT2, "pos": (700, 110), "resize": (450, 300), "border": 0, "relief": "flat" }
-        }
+        self.show()
 
-        # --------------- title ---------------------
-        lbl_title = Label(
+
+    # ---------------- INIT ----------------
+
+    def init_vars(self):
+        self.bill_list = []
+        self.var_invoice = StringVar()
+        
+    # ---------------- UI ----------------
+    def build_title(self):
+        self.lbl_title = Label(
             self.root,
             text="View Customer Bills",
             font=(APP_FONT, 30),
@@ -37,77 +42,78 @@ class salesClass:
             fg="white",
             bd=3,
             relief=RIDGE
-        ).pack(side=TOP, fill=X, padx=10, pady=20)
-
-        lbl_invoice = Label(self.root, text="Invoice No.", font=FONT_GENERAL, bg="white")
-        lbl_invoice.place(x=50, y=100)
-
-        txt_invoice = Entry(self.root, textvariable=self.var_invoice, font=FONT_GENERAL, bg="lightyellow")
-        txt_invoice.place(x=160, y=100, width=180, height=28)
-
-        btn_search = Button(
-            self.root, text="Search", command=self.search,
-            font=FONT_SALES_BTN,
-            bg="#2196f3", fg="white", cursor="hand2"
-        ).place(x=360, y=100, width=120, height=28)
-
-        btn_clear = Button(
-            self.root, text="Clear", command=self.clear,
-            font=FONT_SALES_BTN,
-            bg="lightgray", cursor="hand2"
-        ).place(x=490, y=100, width=120, height=28)
-
-        # ----------------- bill list -------------------
-        sales_Frame = Frame(self.root, bd=3, relief=RIDGE)
-        sales_Frame.place(x=50, y=140, width=200, height=330)
-
-        scrolly = Scrollbar(sales_Frame, orient=VERTICAL)
-        self.Sales_List = Listbox(
-            sales_Frame, font=FONT_GENERAL,
-            bg="white", yscrollcommand=scrolly.set
         )
-        scrolly.pack(side=RIGHT, fill=Y)
+        self.lbl_title.pack(side=TOP, fill=X, padx=10, pady=20)
+
+    def build_search(self):
+        lbl_invoice = Label(self.root, text="Invoice No.", font=FONT_GENERAL, bg="white").place(x=50, y=100)
+
+        txt_invoice = Entry(self.root, textvariable=self.var_invoice,
+              font=FONT_GENERAL, bg="lightyellow").place(x=160, y=100, width=180, height=28)
+
+        btn_search = Button(self.root, text="Search", command=self.search,
+               font=FONT_SALES_BTN, bg="#2196f3",
+               fg="white", cursor="hand2").place(x=360, y=100, width=120, height=28)
+
+        btn_clear = Button(self.root, text="Clear", command=self.clear,
+               font=FONT_SALES_BTN, bg="lightgray",
+               cursor="hand2").place(x=490, y=100, width=120, height=28)
+
+    def build_list(self):
+        frame = Frame(self.root, bd=3, relief=RIDGE)
+        frame.place(x=50, y=140, width=200, height=330)
+
+        scrolly = Scrollbar(frame, orient=VERTICAL)
+
+        self.Sales_List = Listbox(
+            frame,
+            font=FONT_GENERAL,
+            bg="white",
+            yscrollcommand=scrolly.set
+        )
+
         scrolly.config(command=self.Sales_List.yview)
+        scrolly.pack(side=RIGHT, fill=Y)
         self.Sales_List.pack(fill=BOTH, expand=1)
+
         self.Sales_List.bind("<ButtonRelease-1>", self.get_data)
 
-        # --------------- bill area ----------------------
-        bill_Frame = Frame(self.root, bd=3, relief=RIDGE)
-        bill_Frame.place(x=280, y=140, width=410, height=330)
+    def build_bill_area(self):
+        frame = Frame(self.root, bd=3, relief=RIDGE)
+        frame.place(x=280, y=140, width=410, height=330)
 
-        lbl_title2 = Label(
-            bill_Frame, text="Customer Bill Area",
-            font=(APP_FONT, 20), bg="orange"
+        Label(
+            frame,
+            text="Customer Bill Area",
+            font=(APP_FONT, 20),
+            bg="orange"
         ).pack(side=TOP, fill=X)
 
-        scrolly2 = Scrollbar(bill_Frame, orient=VERTICAL)
-        self.bill_area = Text(bill_Frame, bg="lightyellow", yscrollcommand=scrolly2.set)
-        scrolly2.pack(side=RIGHT, fill=Y)
-        scrolly2.config(command=self.bill_area.yview)
+        scrolly = Scrollbar(frame, orient=VERTICAL)
+
+        self.bill_area = Text(
+            frame,
+            bg="lightyellow",
+            yscrollcommand=scrolly.set
+        )
+
+        scrolly.config(command=self.bill_area.yview)
+        scrolly.pack(side=RIGHT, fill=Y)
         self.bill_area.pack(fill=BOTH, expand=1)
 
-        # ------------- image -----------------
-        self.images, self.labels = load_and_place_images(self.root, image_layout)
-        #self.bill_photo = Image.open(IMG_CAT2)
-        #self.bill_photo = self.bill_photo.resize((450, 300))
-        #self.bill_photo = ImageTk.PhotoImage(self.bill_photo)
+    def build_images(self):
+        self.images, self.labels = load_and_place_images(self.root, self.image_layout)
 
-        #lbl_image = Label(self.root, image=self.bill_photo, bd=0)
-        #lbl_image.place(x=700, y=110)
-
-
-
-        self.show()
 
     # -------------------------------------------------------
     def show(self):
-        del self.blll_list[:]
+        del self.bill_list[:]
         self.Sales_List.delete(0, END)
 
         for i in os.listdir(BILL_DIR):
             if i.split('.')[-1] == 'txt':
                 self.Sales_List.insert(END, i)
-                self.blll_list.append(i.split('.')[0])
+                self.bill_list.append(i.split('.')[0])
 
     def get_data(self, ev):
         index_ = self.Sales_List.curselection()
@@ -124,9 +130,9 @@ class salesClass:
 
     def search(self):
         if self.var_invoice.get() == "":
-            messagebox.showerror("Error", "Invoice no. should be required", parent=self.root)
+            msg_manager("Error", "Invoice no. should be required", self)
         else:
-            if self.var_invoice.get() in self.blll_list:
+            if self.var_invoice.get() in self.bill_list:
                 file_path = os.path.join(BILL_DIR, f"{self.var_invoice.get()}.txt")
                 self.bill_area.delete('1.0', END)
 
@@ -134,7 +140,7 @@ class salesClass:
                     for i in fp:
                         self.bill_area.insert(END, i)
             else:
-                messagebox.showerror("Error", "Invalid Invoice No.", parent=self.root)
+                msg_manager("Error", "Invalid Invoice No.", self)
 
     def clear(self):
         self.show()

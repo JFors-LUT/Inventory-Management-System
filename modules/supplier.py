@@ -1,123 +1,147 @@
 from tkinter import*
 from PIL import Image,ImageTk
-from tkinter import ttk,messagebox
+from tkinter import ttk
 import sqlite3
-from data.db.db_helper import db_connect
+from db.db_helper import db_connect, run_query
 from ui.ui_styles import FONT_GENERAL, FONT_TITLE_LBL
+from ui.ui_utility import msg_manager, format_table, BaseWindow
 
-class supplierClass:
+class supplierClass(BaseWindow):
     def __init__(self,root):
         self.root=root
-        self.root.geometry("1100x500+320+220")
-        self.root.config(bg="white")
-        self.root.resizable(False,False)
-        self.root.focus_force()
+        self.setup_window("1100x500+320+220")
 
-        #------------ all variables --------------
-        self.var_searchby=StringVar()
-        self.var_searchtxt=StringVar()
-        self.var_sup_invoice=StringVar()
-        self.var_name=StringVar()
-        self.var_contact=StringVar()
-        
-        
-        #---------- Search Frame -------------
-        lbl_search=Label(self.root,text="Invoice No.",bg="white",font=FONT_GENERAL)
-        lbl_search.place(x=700,y=80)
+        self.init_vars()
+        self.build_title()
+        self.build_search()
+        self.build_form()
+        self.build_buttons()
+        self.build_table()
 
-        txt_search=Entry(self.root,textvariable=self.var_searchtxt,font=FONT_GENERAL,bg="lightyellow").place(x=850,y=80,width=160)
-        btn_search=Button(self.root,command=self.search,text="Search",font=FONT_GENERAL,bg="#4caf50",fg="white",cursor="hand2").place(x=980,y=79,width=100,height=28)
+        self.show()
 
-        #-------------- title ---------------
-        title=Label(self.root,text="Supplier Details",font=(FONT_TITLE_LBL),bg="#0f4d7d",fg="white").place(x=50,y=10,width=1000,height=40)
+    # ---------------- INIT ----------------
+    def init_vars(self):
+        self.var_searchtxt = StringVar()
+        self.var_sup_invoice = StringVar()
+        self.var_name = StringVar()
+        self.var_contact = StringVar()
+        
 
-        #-------------- content ---------------
-        #---------- row 1 ----------------
-        lbl_supplier_invoice=Label(self.root,text="Invoice No.",font=FONT_GENERAL,bg="white").place(x=50,y=80)
-        txt_supplier_invoice=Entry(self.root,textvariable=self.var_sup_invoice,font=FONT_GENERAL,bg="lightyellow").place(x=180,y=80,width=180)
+    #-------------- title ---------------
+    def build_title(self):
+        Label(
+            self.root,
+            text="Supplier Details",
+            font=FONT_TITLE_LBL,
+            bg="#0f4d7d",
+            fg="white"
+        ).place(x=50, y=10, width=1000, height=40)
+    #---------- Search Frame -------------
+    def build_search(self):
+        Label(self.root, text="Invoice No.", bg="white", font=FONT_GENERAL)\
+            .place(x=700, y=80)
+
+        Entry(self.root, textvariable=self.var_searchtxt,
+              font=FONT_GENERAL, bg="lightyellow")\
+            .place(x=850, y=80, width=160)
+
+        Button(self.root, text="Search", command=self.search,
+               font=FONT_GENERAL, bg="#4caf50", fg="white",
+               cursor="hand2")\
+            .place(x=980, y=79, width=100, height=28)
         
-        #---------- row 2 ----------------
-        lbl_name=Label(self.root,text="Name",font=FONT_GENERAL,bg="white").place(x=50,y=120)
-        txt_name=Entry(self.root,textvariable=self.var_name,font=FONT_GENERAL,bg="lightyellow").place(x=180,y=120,width=180)
-        
-        #---------- row 3 ----------------
-        lbl_contact=Label(self.root,text="Contact",font=FONT_GENERAL,bg="white").place(x=50,y=160)
-        txt_contact=Entry(self.root,textvariable=self.var_contact,font=FONT_GENERAL,bg="lightyellow").place(x=180,y=160,width=180)
-        
-        #---------- row 4 ----------------
-        lbl_desc=Label(self.root,text="Description",font=FONT_GENERAL,bg="white").place(x=50,y=200)
-        self.txt_desc=Text(self.root,font=FONT_GENERAL,bg="lightyellow")
-        self.txt_desc.place(x=180,y=200,width=470,height=120)
+    #-------------- content ---------------
+    def build_form(self):
+        fields = [
+            ("Invoice No.", self.var_sup_invoice, 80),
+            ("Name", self.var_name, 120),
+            ("Contact", self.var_contact, 160),
+        ]
+
+        for label, var, y in fields:
+            Label(self.root, text=label, font=FONT_GENERAL, bg="white")\
+                .place(x=50, y=y)
+
+            Entry(self.root, textvariable=var,
+                  font=FONT_GENERAL, bg="lightyellow")\
+                .place(x=180, y=y, width=180)
+
+        # Description is special
+        Label(self.root, text="Description", font=FONT_GENERAL, bg="white")\
+            .place(x=50, y=200)
+
+        self.txt_desc = Text(self.root, font=FONT_GENERAL, bg="lightyellow")
+        self.txt_desc.place(x=180, y=200, width=470, height=120)
         
         #-------------- buttons -----------------
-        btn_add=Button(self.root,text="Save",command=self.add,font=FONT_GENERAL,bg="#2196f3",fg="white",cursor="hand2").place(x=180,y=370,width=110,height=35)
-        btn_update=Button(self.root,text="Update",command=self.update,font=FONT_GENERAL,bg="#4caf50",fg="white",cursor="hand2").place(x=300,y=370,width=110,height=35)
-        btn_delete=Button(self.root,text="Delete",command=self.delete,font=FONT_GENERAL,bg="#f44336",fg="white",cursor="hand2").place(x=420,y=370,width=110,height=35)
-        btn_clear=Button(self.root,text="Clear",command=self.clear,font=FONT_GENERAL,bg="#607d8b",fg="white",cursor="hand2").place(x=540,y=370,width=110,height=35)
+    def build_buttons(self):
+        actions = [
+            ("Save", self.add, "#2196f3"),
+            ("Update", self.update, "#4caf50"),
+            ("Delete", self.delete, "#f44336"),
+            ("Clear", self.clear, "#607d8b"),
+        ]
 
+        x_pos_shift = 180
+        for text, cmd, color in actions:
+            Button(self.root, text=text, command=cmd,
+                   font=FONT_GENERAL, bg=color, fg="white",
+                   cursor="hand2")\
+                .place(x=x_pos_shift, y=370, width=110, height=35)
+            x_pos_shift += 120
         #------------ supplier details -------------
-        sup_frame=Frame(self.root,bd=3,relief=RIDGE)
-        sup_frame.place(x=700,y=120,width=380,height=350)
+    def build_table(self):
+        frame = Frame(self.root, bd=3, relief=RIDGE)
+        frame.place(x=700, y=120, width=380, height=350)
 
-        scrolly=Scrollbar(sup_frame,orient=VERTICAL)
-        scrollx=Scrollbar(sup_frame,orient=HORIZONTAL)\
-        
-        self.SupplierTable=ttk.Treeview(sup_frame,columns=("invoice","name","contact","desc"),yscrollcommand=scrolly.set,xscrollcommand=scrollx.set)
-        scrollx.pack(side=BOTTOM,fill=X)
-        scrolly.pack(side=RIGHT,fill=Y)
-        scrollx.config(command=self.SupplierTable.xview)
-        scrolly.config(command=self.SupplierTable.yview)
-        self.SupplierTable.heading("invoice",text="Invoice")
-        self.SupplierTable.heading("name",text="Name")
-        self.SupplierTable.heading("contact",text="Contact")
-        self.SupplierTable.heading("desc",text="Description")
-        self.SupplierTable["show"]="headings"
-        self.SupplierTable.column("invoice",width=90)
-        self.SupplierTable.column("name",width=100)
-        self.SupplierTable.column("contact",width=100)
-        self.SupplierTable.column("desc",width=100)
-        
-        self.SupplierTable.pack(fill=BOTH,expand=1)
+        columns = ("invoice", "name", "contact", "desc")
+        names = ("Invoice", "Name", "Contact", "Description")
+        widths = [90]+[100] * (len(columns)-1) 
+        self.SupplierTable =format_table(frame, columns, names, widths)
         self.SupplierTable.bind("<ButtonRelease-1>",self.get_data)
-        self.show()
 #-----------------------------------------------------------------------------------------------------
+
     def add(self):
-        con = db_connect()
-        cur = con.cursor()
-        try:
-            if self.var_sup_invoice.get()=="":
-                messagebox.showerror("Error","Invoice must be required",parent=self.root)
-            else:
-                cur.execute("Select * from supplier where invoice=?",(self.var_sup_invoice.get(),))
-                row=cur.fetchone()
-                if row!=None:
-                    messagebox.showerror("Error","Invoice no. is already assigned",parent=self.root)
-                else:
-                    cur.execute("insert into supplier(invoice,name,contact,desc) values(?,?,?,?)",(
-                        self.var_sup_invoice.get(),
-                        self.var_name.get(),
-                        self.var_contact.get(),
-                        self.txt_desc.get('1.0',END),
-                    ))
-                    con.commit()
-                    messagebox.showinfo("Success","Supplier Added Successfully",parent=self.root)
-                    self.clear()
-                    self.show()
-        except Exception as ex:
-            messagebox.showerror("Error",f"Error due to : {str(ex)}")
-            
+        if not self.var_sup_invoice.get():
+            msg_manager("Error", "Invoice must be required", self)
+            return
+
+        # Check exist
+        result = run_query(("SELECT * FROM supplier WHERE invoice=?", (self.var_sup_invoice.get(),)), fetch=True)
+        if not result["ok"]:
+            msg_manager("Error", f"Error due to: {result['error']}", self)
+            return
+        if result["data"]:
+            msg_manager("Error", "Invoice no. is already assigned", self)
+            return
+
+        insert_result = run_query((
+            "INSERT INTO supplier(invoice,name,contact,desc) VALUES (?,?,?,?)",
+            (
+                self.var_sup_invoice.get(),
+                self.var_name.get(),
+                self.var_contact.get(),
+                self.txt_desc.get('1.0', END),
+            )
+        ))
+        if insert_result["ok"]:
+            msg_manager("Success", "Supplier Added Successfully", self)
+            self.clear()
+            self.show()
+        else:
+            msg_manager("Error", f"Error due to: {insert_result['error']}", self)
+
 
     def show(self):
-        con = db_connect()
-        cur = con.cursor()
-        try:
-            cur.execute("select * from supplier")
-            rows=cur.fetchall()
+        result = run_query(("SELECT * FROM supplier", ()), fetch=True)
+        if result["ok"]:
             self.SupplierTable.delete(*self.SupplierTable.get_children())
-            for row in rows:
-                self.SupplierTable.insert('',END,values=row)
-        except Exception as ex:
-            messagebox.showerror("Error",f"Error due to : {str(ex)}")
+            for row in result["data"]:
+                self.SupplierTable.insert('', END, values=row)
+        else:
+            msg_manager("Error", f"Error due to: {result['error']}", self)
+
 
     def get_data(self,ev):
         f=self.SupplierTable.focus()
@@ -130,49 +154,57 @@ class supplierClass:
         self.txt_desc.insert(END,row[3])
 
     def update(self):
-        con = db_connect()
-        cur = con.cursor()
-        try:
-            if self.var_sup_invoice.get()=="":
-                messagebox.showerror("Error","Invoice must be required",parent=self.root)
-            else:
-                cur.execute("Select * from supplier where invoice=?",(self.var_sup_invoice.get(),))
-                row=cur.fetchone()
-                if row==None:
-                    messagebox.showerror("Error","Invalid Invoice No.",parent=self.root)
-                else:
-                    cur.execute("update supplier set name=?,contact=?,desc=? where invoice=?",(
-                        self.var_name.get(),
-                        self.var_contact.get(),
-                        self.txt_desc.get('1.0',END),
-                        self.var_sup_invoice.get(),
-                    ))
-                    con.commit()
-                    messagebox.showinfo("Success","Supplier Updated Successfully",parent=self.root)
-                    self.show()
-        except Exception as ex:
-            messagebox.showerror("Error",f"Error due to : {str(ex)}")
+        if not self.var_sup_invoice.get():
+            msg_manager("Error", "Invoice must be required", self)
+            return
+
+        # Check if exists
+        result = run_query(("SELECT * FROM supplier WHERE invoice=?", (self.var_sup_invoice.get(),)), fetch=True)
+        if not result["ok"]:
+            msg_manager("Error", f"Error due to: {result['error']}", self)
+            return
+        if not result["data"]:
+            msg_manager("Error", "Invalid Invoice No.", self)
+            return
+        
+        update_result = run_query((
+            "UPDATE supplier SET name=?, contact=?, desc=? WHERE invoice=?",
+            (
+                self.var_name.get(),
+                self.var_contact.get(),
+                self.txt_desc.get('1.0', END),
+                self.var_sup_invoice.get(),
+            )
+        ))
+        if update_result["ok"]:
+            msg_manager("Success", "Supplier Updated Successfully", self)
+            self.show()
+        else:
+            msg_manager("Error", f"Error due to: {update_result['error']}", self)
+
 
     def delete(self):
-        con = db_connect()
-        cur = con.cursor()
-        try:
-            if self.var_sup_invoice.get()=="":
-                messagebox.showerror("Error","Invoice No. must be required",parent=self.root)
+        if not self.var_sup_invoice.get():
+            msg_manager("Error", "Invoice No. must be required", self)
+            return
+
+        # Check if  exists
+        result = run_query(("SELECT * FROM supplier WHERE invoice=?", (self.var_sup_invoice.get(),)), fetch=True)
+        if not result["ok"]:
+            msg_manager("Error", f"Error due to: {result['error']}", self)
+            return
+        if not result["data"]:
+            msg_manager("Error", "Invalid Invoice No.", self)
+            return
+
+        if msg_manager("Confirm", "Do you really want to delete?", self):
+            delete_result = run_query(("DELETE FROM supplier WHERE invoice=?", (self.var_sup_invoice.get(),)))
+            if delete_result["ok"]:
+                msg_manager("Delete", "Supplier Deleted Successfully", self)
+                self.clear()
             else:
-                cur.execute("Select * from supplier where invoice=?",(self.var_sup_invoice.get(),))
-                row=cur.fetchone()
-                if row==None:
-                    messagebox.showerror("Error","Invalid Invoice No.",parent=self.root)
-                else:
-                    op=messagebox.askyesno("Confirm","Do you really want to delete?",parent=self.root)
-                    if op==True:
-                        cur.execute("delete from supplier where invoice=?",(self.var_sup_invoice.get(),))
-                        con.commit()
-                        messagebox.showinfo("Delete","Supplier Deleted Successfully",parent=self.root)
-                        self.clear()
-        except Exception as ex:
-            messagebox.showerror("Error",f"Error due to : {str(ex)}")
+                msg_manager("Error", f"Error due to: {delete_result['error']}", self)
+
 
     def clear(self):
         self.var_sup_invoice.set("")
@@ -183,21 +215,20 @@ class supplierClass:
         self.show()
 
     def search(self):
-        con = db_connect()
-        cur = con.cursor()
-        try:
-            if self.var_searchtxt.get()=="":
-                messagebox.showerror("Error","Invoice No. should be required",parent=self.root)
+        if not self.var_searchtxt.get():
+            msg_manager("Error", "Invoice No. should be required", self)
+            return
+
+        result = run_query(("SELECT * FROM supplier WHERE invoice=?", (self.var_searchtxt.get(),)), fetch=True)
+        if result["ok"]:
+            if result["data"]:
+                self.SupplierTable.delete(*self.SupplierTable.get_children())
+                for row in result["data"]:
+                    self.SupplierTable.insert('', END, values=row)
             else:
-                cur.execute("select * from supplier where invoice=?",(self.var_searchtxt.get(),))
-                row=cur.fetchone()
-                if row!=None:
-                    self.SupplierTable.delete(*self.SupplierTable.get_children())
-                    self.SupplierTable.insert('',END,values=row)
-                else:
-                    messagebox.showerror("Error","No record found!!!",parent=self.root)
-        except Exception as ex:
-            messagebox.showerror("Error",f"Error due to : {str(ex)}")
+                msg_manager("Error", "No record found!!!", self)
+        else:
+            msg_manager("Error", f"Error due to: {result['error']}", self)
 
 
 if __name__=="__main__":
