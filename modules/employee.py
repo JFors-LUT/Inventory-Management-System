@@ -1,13 +1,18 @@
 from tkinter import*
 from tkinter import ttk
-from db.db_helper import run_query
+from db.db_helper import run_query, is_admin
 from ui.ui_styles import FONT_GENERAL, APP_FONT
 from ui.ui_utility import msg_manager, format_table, BaseWindow
 
+from utility.security import hash_password
+
 class employeeClass(BaseWindow):
-    def __init__(self,root):
+    def __init__(self,root,user_name, user_type):
         self.root=root
+        self.user=user_name
+        self.user_type = user_type
         self.setup_window("1100x500+320+220")
+        self.set_title("Employee")
 
         self.init_variables()
         self.build_search()
@@ -161,35 +166,32 @@ class employeeClass(BaseWindow):
         #initial position
         button_pos_x = 500
         for text, cmd, color in actions:
-            Button(self.root, 
+            btn =Button(self.root, 
                 text=text, 
                 command=cmd,
                 font=FONT_GENERAL, 
                 bg=color, 
                 fg="white",
                 cursor="hand2"
-            ).place(x=button_pos_x, y=305, width=110, height=28)
+            )
+            self.restrict_admin(btn) if text == "Delete" else None
+            btn.place(x=button_pos_x, y=305, width=110, height=28)
             #button offset
             button_pos_x += 120
 
     def build_table(self):
         frame = Frame(self.root, bd=3, relief=RIDGE)
         frame.place(x=0, y=350, relwidth=1, height=150)
-
         columns = ("eid","name","email","gender","contact","dob","doj","pass","utype","address","salary")
         names = ("EMP ID","Name","Email","Gender","Contact","D.O.B","D.O.J","Password","User Type","Address","Salary")
-        widths = [90]+[100] * (len(columns)-1) 
+        widths = [90]+[100] * (len(columns)-1)
         self.EmployeeTable = format_table(frame, columns, names, widths)
 
         self.EmployeeTable.bind("<ButtonRelease-1>", self.get_data)
 
 #-----------------------------------------------------------------------------------------------------
     def add(self):
-        if not self.var_emp_id.get():
-            msg_manager("Error","Employee ID must be required", self)
-            return
-        if not self.var_salary.get().isdigit():
-            msg_manager("Error","Salary should be a number", self)
+        if not self.validate():
             return
 
         # Check if employee exists
@@ -213,7 +215,7 @@ class employeeClass(BaseWindow):
                 self.var_contact.get(),
                 self.var_dob.get(),
                 self.var_doj.get(),
-                self.var_pass.get(),
+                hash_password(self.var_pass.get()),
                 self.var_utype.get(),
                 self.txt_address.get('1.0', END),
                 self.var_salary.get(),
@@ -257,12 +259,7 @@ class employeeClass(BaseWindow):
 
     
     def update(self):
-        if not self.var_emp_id.get():
-            msg_manager("Error","Employee ID must be required", self)
-            return
-        
-        if not self.var_salary.get().isdigit():
-            msg_manager("Error","Salary should be a number", self)
+        if not self.validate():
             return
 
         # Check if employee exists
@@ -285,7 +282,7 @@ class employeeClass(BaseWindow):
                 self.var_contact.get(),
                 self.var_dob.get(),
                 self.var_doj.get(),
-                self.var_pass.get(),
+                hash_password(self.var_pass.get()),
                 self.var_utype.get(),
                 self.txt_address.get('1.0', END),
                 self.var_salary.get(),
@@ -299,6 +296,11 @@ class employeeClass(BaseWindow):
             msg_manager("Error",f"Error due to: {update_result['error']}", self)
 
     def delete(self):
+
+        if not is_admin(self.user_type):
+            msg_manager("Error", "Only admin can delete employee", self)
+            return
+
         if not self.var_emp_id.get():
             msg_manager("Error","Employee ID must be required", self)
             return
@@ -358,6 +360,30 @@ class employeeClass(BaseWindow):
                 msg_manager("Error","No record found!!!", self)
         else:
             msg_manager("Error",f"Error due to: {result['error']}", self)
+
+
+    def validate(self):
+        if not self.var_name.get().strip():
+            msg_manager("Error", "Name required", self)
+            return False
+
+        if "@" not in self.var_email.get():
+            msg_manager("Error", "Invalid email", self)
+            return False
+
+        if not self.var_contact.get().isdigit():
+            msg_manager("Error", "Contact must be numeric", self)
+            return False
+
+        if not self.var_salary.get().isdigit():
+            msg_manager("Error", "Salary must be numeric", self)
+            return False
+
+        if self.var_gender.get() == "Select":
+            msg_manager("Error", "Select gender", self)
+            return False
+
+        return True   
 
 if __name__=="__main__":
     root=Tk()

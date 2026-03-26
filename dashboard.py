@@ -18,10 +18,14 @@ from modules.sales import salesClass
 
 
 class IMS(BaseWindow):
-    def __init__(self, root):
+    def __init__(self, root, user_name, user_type):
         self.root = root
         self.setup_window("1350x700+110+80")
-
+        self.user = user_name
+        self.user_type = user_type
+        self.set_title("IMS")
+        self.launcher = True                    #login flag to identify between dashboard and billing for logout function
+        
         self.init_data()
         self.build_header()
         self.build_menu()
@@ -74,6 +78,7 @@ class IMS(BaseWindow):
         self.btn_logout = Button(
             self.root,
             text="Logout",
+            command=self.logout,
             font=(MENU_FONT, 15, "bold"),
             bg="yellow",
             cursor="hand2"
@@ -107,12 +112,14 @@ class IMS(BaseWindow):
         self.lbl_menu.pack(side=TOP, fill=X)
 
         for text, cmd in self.buttons:
-            Button(frame, 
+            btn = Button(frame, 
                 text=text, 
                 command=cmd, 
                 image=self.icon_side, 
                 **BUTTON_MENU
-            ).pack(side=TOP, fill=X)
+            )
+            self.restrict_admin(btn) if text == "Employee" else None
+            btn.pack(side=TOP, fill=X)
 
         # ----------- content ----------------
     def build_dashboard(self):
@@ -136,24 +143,23 @@ class IMS(BaseWindow):
     # -------------- functions ----------------
     def employee(self):
         self.new_win = Toplevel(self.root)
-        self.new_obj = employeeClass(self.new_win)
+        self.new_obj = employeeClass(self.new_win, self.user, self.user_type)
 
     def supplier(self):
         self.new_win = Toplevel(self.root)
-        self.new_obj = supplierClass(self.new_win)
+        self.new_obj = supplierClass(self.new_win, self.user, self.user_type)
 
     def category(self):
         self.new_win = Toplevel(self.root)
-        self.new_obj = categoryClass(self.new_win)
+        self.new_obj = categoryClass(self.new_win, self.user, self.user_type)
 
     def product(self):
         self.new_win = Toplevel(self.root)
-        self.new_obj = productClass(self.new_win)
+        self.new_obj = productClass(self.new_win, self.user, self.user_type)
 
     def sales(self):
         self.new_win = Toplevel(self.root)
-        self.new_obj = salesClass(self.new_win)
-        
+        self.new_obj = salesClass(self.new_win, self.user, self.user_type)
 
     def update_content(self):
         con = db_connect()
@@ -194,7 +200,11 @@ class IMS(BaseWindow):
             con.close()
 
 
+
+
 if __name__ == "__main__":
+    from modules.login import LoginSystem
+
     root = Tk()
-    obj = IMS(root)
+    obj = LoginSystem(root)
     root.mainloop()

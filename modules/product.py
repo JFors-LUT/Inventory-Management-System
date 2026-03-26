@@ -2,14 +2,17 @@ from tkinter import*
 from PIL import Image,ImageTk
 from tkinter import ttk
 import sqlite3
-from db.db_helper import db_connect, run_query
+from db.db_helper import db_connect, run_query, is_admin
 from ui.ui_styles import FONT_GENERAL, FONT_PRODUCT_TITLE, APP_FONT
 from ui.ui_utility import msg_manager, format_table, BaseWindow
 
 class productClass(BaseWindow):
-    def __init__(self,root):
+    def __init__(self,root, user_name, user_type):
         self.root=root
+        self.user=user_name
+        self.user_type = user_type
         self.setup_window("1100x500+320+220")
+        self.set_title("Product")
 
         self.init_vars()
 
@@ -89,9 +92,11 @@ class productClass(BaseWindow):
         #-------------- button setup -----------------
         btn_x_offset = 10
         for text, cmd, color in actions:
-            Button(frame, text=text, command=cmd,
+            btn = Button(frame, text=text, command=cmd,
                    font=FONT_GENERAL, bg=color, fg="white",
-                   cursor="hand2").place(x=btn_x_offset, y=400, width=100, height=40)
+                   cursor="hand2")
+            self.restrict_admin(btn) if text == "Delete" else None
+            btn.place(x=btn_x_offset, y=400, width=100, height=40)
             btn_x_offset += 110
 
         #---------- Search Frame -------------
@@ -151,18 +156,8 @@ class productClass(BaseWindow):
 
     
     def add(self):
-        print(self.var_name.get().strip()=="")
-        print(self.var_name.get().strip()==" ")
-        if self.var_cat.get()=="Select" or self.var_cat.get()=="Empty" or self.var_sup.get()=="Select" or self.var_sup.get()=="Empty":
-                msg_manager("Error", "All fields are required", self)
-                return        
-        if self.var_name.get().strip()=="" or self.var_price.get().strip()=="" or self.var_qty.get().strip()=="":
-                msg_manager("Error", "All fields are required", self)
-                return
-        
-        if not self.var_price.get().isdigit() or not self.var_qty.get().isdigit():
-                msg_manager("Error", "Price and Quantity should be numbers", self)
-                return
+        if not self.validate():
+            return
 
         # Check if product exists
         result = run_query(("SELECT * FROM product WHERE name=?", (self.var_name.get(),)), fetch=True)
@@ -219,6 +214,9 @@ class productClass(BaseWindow):
         if not self.var_pid.get():
             msg_manager("Error", "Please select product from list", self)
             return
+        
+        if not self.validate():
+            return
 
         # Check if product exists
         result = run_query(("SELECT * FROM product WHERE pid=?", (self.var_pid.get(),)), fetch=True)
@@ -250,6 +248,10 @@ class productClass(BaseWindow):
 
 
     def delete(self):
+        if not is_admin(self.user_type):
+            msg_manager("Error", "Only admin can delete product", self)
+            return  
+
         if not self.var_pid.get():
             msg_manager("Error", "Select Product from the list", self)
             return
@@ -306,6 +308,31 @@ class productClass(BaseWindow):
                 msg_manager("Error", "No record found!!!", self)
         else:
             msg_manager("Error", f"Error due to: {result['error']}", self)
+
+    def validate(self):
+        if not self.var_name.get().strip():
+            msg_manager("Error", "Product name required", self)
+            return False
+
+        if not self.var_price.get().replace('.', '', 1).isdigit():
+            msg_manager("Error", "Price must be a number", self)
+            return False
+
+        if float(self.var_price.get()) <= 0:
+            msg_manager("Error", "Price must be positive", self)
+            return False
+
+        if not self.var_qty.get().isdigit():
+            msg_manager("Error", "Quantity must be integer", self)
+            return False
+
+        if int(self.var_qty.get()) < 0:
+            msg_manager("Error", "Quantity cannot be negative", self)
+            return False
+
+        return True
+
+
 if __name__=="__main__":
     root=Tk()
     obj=productClass(root)

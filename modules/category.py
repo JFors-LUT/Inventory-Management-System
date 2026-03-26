@@ -1,9 +1,9 @@
 import os
 from tkinter import *
 from tkinter import ttk
-from db.db_helper import db_connect, run_query
+from db.db_helper import run_query, is_admin
 from config import IMAGE_DIR
-from ui.ui_utility import load_and_place_images, msg_manager, BaseWindow
+from ui.ui_utility import load_and_place_images, msg_manager, format_table, BaseWindow
 
 from ui.ui_styles import FONT_GENERAL, APP_FONT
 
@@ -14,9 +14,12 @@ IMG_CATEGORY = os.path.join(IMAGE_DIR, "category.jpg")
 
 
 class categoryClass(BaseWindow):
-    def __init__(self,root):
+    def __init__(self,root, user_name, user_type):
         self.root=root
+        self.user=user_name
+        self.user_type = user_type
         self.setup_window("1100x500+320+220")
+        self.set_title("Category")
 
         #--------- image data ---------
 
@@ -87,25 +90,14 @@ class categoryClass(BaseWindow):
             fg="white", 
             cursor="hand2"
         )
+        self.restrict_admin(self.delete_btn)
         self.delete_btn.place(x=520, y=170, width=150, height=30)
 
     def build_table(self):
         frame = Frame(self.root, bd=3, relief=RIDGE)
         frame.place(x=700, y=100, width=380, height=100)
 
-        self.CategoryTable = ttk.Treeview(frame, columns=("cid", "name"), show="headings")
-        self.CategoryTable.heading("cid", text="C ID")
-        self.CategoryTable.heading("name", text="Name")
-        self.CategoryTable.column("cid", width=90)
-        self.CategoryTable.column("name", width=100)
-
-        # Scrollbars
-        scrolly = Scrollbar(frame, orient=VERTICAL, command=self.CategoryTable.yview)
-        scrollx = Scrollbar(frame, orient=HORIZONTAL, command=self.CategoryTable.xview)
-        self.CategoryTable.configure(yscrollcommand=scrolly.set, xscrollcommand=scrollx.set)
-        scrollx.pack(side=BOTTOM, fill=X)
-        scrolly.pack(side=RIGHT, fill=Y)
-        self.CategoryTable.pack(fill=BOTH, expand=1)
+        self.CategoryTable = format_table(frame, ["cid", "name"], ["C ID", "Name"], [90, 100])
 
         self.CategoryTable.bind("<ButtonRelease-1>", self.get_data)
 
@@ -119,12 +111,13 @@ class categoryClass(BaseWindow):
         #-------------------------------------------------- 
 
     def add(self):
-        if self.var_name.get() == "":
-            msg_manager("Error","Category Name must be required", self)
+        if not self.validate():
             return
 
         # Check if exist 
-        res = run_query(("SELECT * FROM category WHERE name=?", (self.var_name.get(),)), fetch=True)
+        res = run_query(("SELECT  * FROM category WHERE name=?", (self.var_name.get(),)), fetch=True)
+
+        
         if not res["ok"]:
             msg_manager("Error",res["error"], self)
             return
@@ -166,31 +159,46 @@ class categoryClass(BaseWindow):
         self.var_name.set(row[1])
     
     def delete(self):
-        con = db_connect()
-        cur = con.cursor()
-        try:
-            if self.var_cat_id.get()=="":
-                msg_manager("Error","Category name must be required", self)
-            else:
-                cur.execute("Select * from category where cid=?",(self.var_cat_id.get(),))
-                row=cur.fetchone()
-                if row==None:
-                    msg_manager("Error","Invalid Category Name", self)
-                else:
-                    op=msg_manager("Confirm", "Do you really want to delete?",self)
-                    if op==True:
-                        cur.execute("delete from category where cid=?",(self.var_cat_id.get(),))
-                        con.commit()
-                        msg_manager("Success", "Category Deleted Successfully", self)
-                        self.clear()
-                        self.var_cat_id.set("")
-                        self.var_name.set("")
-        except Exception as ex:
-            msg_manager("Error",f"Error due to : {str(ex)}")
-        finally:
-            con.close()
+        cid = self.var_cat_id.get()
 
+        if not is_admin(self.user_type):
+            msg_manager("Error", "Only admin can delete category", self)
+            return
 
+        if not cid:
+            msg_manager("Error", "Category name must be required", self)
+            return
+
+        # Check exist
+        res = run_query(("SELECT * FROM category WHERE cid=?", (cid,)), fetch=True)
+        if not res["ok"]:
+            msg_manager("Error", f"Error due to: {res['error']}", self)
+            return
+
+        if not res["data"]:
+            msg_manager("Error", "Invalid Category Name", self)
+            return
+
+        if not msg_manager("Confirm", "Do you really want to delete?", self):
+            return
+
+        # Delete
+        res = run_query(("DELETE FROM category WHERE cid=?", (cid,)))
+        if not res["ok"]:
+            msg_manager("Error", f"Error due to: {res['error']}", self)
+            return
+
+        msg_manager("Success", "Category Deleted Successfully", self)
+        self.clear()
+        self.var_cat_id.set("")
+        self.var_name.set("")
+        
+    def validate(self):
+        if not self.var_name.get().strip():
+            msg_manager("Error", "Category name required", self)
+            return False
+
+        return True
 
 if __name__=="__main__":
     root=Tk()

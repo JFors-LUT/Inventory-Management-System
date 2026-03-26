@@ -22,7 +22,6 @@ def run_query(command: tuple, fetch=False):
 
         data = cur.fetchall() if fetch else None
         con.commit()
-
         return {"ok": True, "data": data, "error": None}
 
     except Exception as e:
@@ -30,4 +29,8 @@ def run_query(command: tuple, fetch=False):
         return {"ok": False, "data": None, "error": str(e)}
 
     finally:
+        
         con.close()
+
+def is_admin(user_type):
+    return user_type == "Admin"

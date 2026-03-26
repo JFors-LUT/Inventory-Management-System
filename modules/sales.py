@@ -8,9 +8,12 @@ from ui.ui_styles import FONT_GENERAL, FONT_SALES_BTN, APP_FONT
 IMG_CAT2 = os.path.join(IMAGE_DIR, "cat2.jpg")
 
 class salesClass(BaseWindow):
-    def __init__(self, root):
+    def __init__(self, root, user_name, user_type):
         self.root = root
+        self.user = user_name
+        self.user_type = user_type
         self.setup_window("1100x500+320+220")
+        self.set_title("Sales")
         #--------- image data ------
         self.image_layout = {
             "img1": {"path": IMG_CAT2, "pos": (700, 110), "resize": (450, 300), 

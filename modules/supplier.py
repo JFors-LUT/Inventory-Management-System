@@ -2,14 +2,17 @@ from tkinter import*
 from PIL import Image,ImageTk
 from tkinter import ttk
 import sqlite3
-from db.db_helper import db_connect, run_query
+from db.db_helper import run_query, is_admin
 from ui.ui_styles import FONT_GENERAL, FONT_TITLE_LBL
 from ui.ui_utility import msg_manager, format_table, BaseWindow
 
 class supplierClass(BaseWindow):
-    def __init__(self,root):
+    def __init__(self,root,user_name, user_type):
         self.root=root
+        self.user=user_name
+        self.user_type = user_type
         self.setup_window("1100x500+320+220")
+        self.set_title("Supplier")
 
         self.init_vars()
         self.build_title()
@@ -85,10 +88,12 @@ class supplierClass(BaseWindow):
 
         x_pos_shift = 180
         for text, cmd, color in actions:
-            Button(self.root, text=text, command=cmd,
+            btn = Button(self.root, text=text, command=cmd,
                    font=FONT_GENERAL, bg=color, fg="white",
-                   cursor="hand2")\
-                .place(x=x_pos_shift, y=370, width=110, height=35)
+                   cursor="hand2")
+            
+            self.restrict_admin(btn) if text == "Delete" else None
+            btn.place(x=x_pos_shift, y=370, width=110, height=35)
             x_pos_shift += 120
         #------------ supplier details -------------
     def build_table(self):
@@ -107,6 +112,9 @@ class supplierClass(BaseWindow):
             msg_manager("Error", "Invoice must be required", self)
             return
 
+        if not self.validate():
+            return
+        
         # Check exist
         result = run_query(("SELECT * FROM supplier WHERE invoice=?", (self.var_sup_invoice.get(),)), fetch=True)
         if not result["ok"]:
@@ -157,6 +165,9 @@ class supplierClass(BaseWindow):
         if not self.var_sup_invoice.get():
             msg_manager("Error", "Invoice must be required", self)
             return
+        
+        if not self.validate():
+            return
 
         # Check if exists
         result = run_query(("SELECT * FROM supplier WHERE invoice=?", (self.var_sup_invoice.get(),)), fetch=True)
@@ -184,6 +195,10 @@ class supplierClass(BaseWindow):
 
 
     def delete(self):
+        if not is_admin(self.user_type):
+            msg_manager("Error", "Only admin can delete supplier", self)
+            return
+
         if not self.var_sup_invoice.get():
             msg_manager("Error", "Invoice No. must be required", self)
             return
@@ -230,6 +245,16 @@ class supplierClass(BaseWindow):
         else:
             msg_manager("Error", f"Error due to: {result['error']}", self)
 
+    def validate(self):
+        if not self.var_name.get().strip():
+            msg_manager("Error", "Name required", self)
+            return False
+
+        if not self.var_contact.get().isdigit():
+            msg_manager("Error", "Contact must be numeric", self)
+            return False
+
+        return True
 
 if __name__=="__main__":
     root=Tk()

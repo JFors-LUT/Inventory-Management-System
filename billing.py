@@ -16,9 +16,14 @@ from ui.ui_styles import FONT_TITLE, FONT_BILLING_PRIMARY, FONT_BILLING_SECONDAR
 IMG_LOGO = os.path.join(IMAGE_DIR, "logo1.png")
 
 class billClass(BaseWindow):
-    def __init__(self,root):
+    def __init__(self,root,user_name, user_type, launcher):
         self.root=root
+        self.user=user_name
+        self.user_type = user_type
+        self.launcher = launcher
+
         self.setup_window("1350x700+110+80")
+        self.set_title("Billing")
  
         self.init_variables()
         self.build_header()
@@ -35,6 +40,7 @@ class billClass(BaseWindow):
     def init_variables(self):
         self.cart_list = []
         self.chk_print = 0
+        self.discount_percent = 5 # Discount percentage
 
         self.var_search = StringVar()
         self.var_cal_input = StringVar()
@@ -67,6 +73,7 @@ class billClass(BaseWindow):
         btn_logout = Button(
             self.root,
             text="Logout",
+            command=self.logout,
             font=(FONT_BILLING_PRIMARY, 15, "bold"),
             bg="yellow",
             cursor="hand2"
@@ -442,8 +449,8 @@ class billClass(BaseWindow):
         self.discount=0
         for row in self.cart_list:
             self.bill_amnt=self.bill_amnt+(float(row[2])*int(row[3]))
-        self.discount=(self.bill_amnt*5)/100
-        self.net_pay=self.bill_amnt-self.discount
+        self.discount=round((self.bill_amnt*self.discount_percent)/100, 2)
+        self.net_pay=round(self.bill_amnt-self.discount, 2)
         self.lbl_amnt.config(text=f"Bill Amount\n{str(self.bill_amnt)}")
         self.lbl_net_pay.config(text=f"Net Pay\n{str(self.net_pay)}")
         self.cartTitle.config(text=f"Cart \t Total Products: [{str(len(self.cart_list))}]")
@@ -560,7 +567,7 @@ class billClass(BaseWindow):
         time_=time.strftime("%I:%M:%S")
         date_=time.strftime("%d-%m-%Y")
         self.lbl_clock.config(text=f"Welcome to Inventory Management System\t\t Date: {str(date_)}\t\t Time: {str(time_)}")
-        self.lbl_clock.after(200,self.update_date_time)
+        self.lbl_clock.after(1000,self.update_date_time)
 
     def print_bill(self):
         if self.chk_print==1:
@@ -572,6 +579,9 @@ class billClass(BaseWindow):
             msg_manager("Print","Please generate bill to print the receipt", self)
 
 if __name__=="__main__":
-    root=Tk()
-    obj=billClass(root)
+    from modules.login import LoginSystem
+    
+    root = Tk()
+    #Module is not dashboard, False is passed to launch correct module after login
+    obj = LoginSystem(root, dashboard=False)
     root.mainloop()

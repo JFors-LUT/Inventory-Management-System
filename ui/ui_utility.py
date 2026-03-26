@@ -1,7 +1,7 @@
 import os
 from PIL import Image, ImageTk
 from config import IMAGE_DIR
-from tkinter import Label, RAISED, FLAT, messagebox
+from tkinter import DISABLED, Label, RAISED, FLAT, messagebox
 from tkinter import ttk, Scrollbar, VERTICAL, HORIZONTAL, BOTTOM, RIGHT, BOTH, X, Y
 
 class BaseWindow:
@@ -11,6 +11,32 @@ class BaseWindow:
         self.root.resizable(resizable, resizable)
         if focus:
             self.root.focus_force()
+
+    def set_title(self, module_name):
+        self.root.title(f"{module_name} | {self.user}")
+
+    def logout(self):
+        print(self.launcher)
+        if not msg_manager("Confirm", "Do you really want to logout?", self):
+            return
+
+        from modules.login import LoginSystem
+        from tkinter import Tk
+
+        self.root.destroy()
+
+        new_root = Tk()
+        LoginSystem(new_root, self.launcher)
+        new_root.mainloop()
+        
+               
+    def restrict_admin(self, widget):
+        if self.user_type != "Admin":
+            widget.config(
+                state=DISABLED,
+                disabledforeground="gray",
+                cursor="arrow"
+            )
 
 def load_image(image_path, size=None):
     image = Image.open(image_path)
