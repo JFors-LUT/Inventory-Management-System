@@ -75,6 +75,11 @@ class employeeClass(BaseWindow):
         self.btn_search.place(x=410,y=9,width=150,height=30)
 
     def build_form(self):
+        self.build_generics()
+        self.build_combos()
+        self.build_address()
+
+    def build_generics(self):
         self.title = Label(self.root,
             text="Employee Details",
             font=FONT_GENERAL,
@@ -92,7 +97,6 @@ class employeeClass(BaseWindow):
             ("D.O.J.", self.var_doj, 750, 190),
             ("Email", self.var_email, 50, 230),
             ("Password", self.var_pass, 350, 230),
-            ("Contact", self.var_contact, 750, 150),
             ("Salary", self.var_salary, 500, 270),
         ]
         for label, var, x, y in generic_fields:
@@ -115,6 +119,7 @@ class employeeClass(BaseWindow):
                     bg="lightyellow"
                 ).place(x=x + 100, y=y, width=180)
 
+    def build_combos(self):
         # Combobox, select option
         self.lbl_gender=Label(
             self.root,
@@ -145,6 +150,7 @@ class employeeClass(BaseWindow):
         self.cbox_utype.place(x=850, y=230, width=180)
 
         # Address has larger box
+    def build_address(self):
         self.address_lbl = Label(self.root, 
             text="Address", 
             font=FONT_GENERAL, 
