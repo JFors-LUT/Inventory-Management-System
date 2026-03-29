@@ -303,7 +303,7 @@ class billClass(BaseWindow):
         self.lbl_amnt.place(x=2, y=5, width=120, height=70)
 
         self.lbl_discount = Label(frame,
-            text="Discount\n[5%]",
+            text=f"Discount\n[{self.discount_percent}%]",
             font=(FONT_BILLING_SECONDARY,15,"bold"),
             bg="#8bc34a",
             fg="white"
