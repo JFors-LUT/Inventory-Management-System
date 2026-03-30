@@ -329,6 +329,10 @@ class productClass(BaseWindow):
         if int(self.var_qty.get()) < 0:
             msg_manager("Error", "Quantity cannot be negative", self)
             return False
+        
+        if self.var_cat.get() == "Select" or self.var_sup.get() == "Select":
+            msg_manager("Error", "Please select category and supplier", self)
+            return False
 
         return True
 
