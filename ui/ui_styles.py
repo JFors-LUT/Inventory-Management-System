@@ -23,16 +23,13 @@ FONT_BILLING_PRIMARY = MENU_FONT
 FONT_BILLING_SECONDARY = APP_FONT
 
 # ---- colors ----
-COLOR_PRIMARY = "#010c48"
-COLOR_SECONDARY = "#4d636d"
-COLOR_ACCENT = "#009688"
-COLOR_WHITE = "white"
-COLOR_WARNING = "yellow"
+#COLOR_WHITE = "white"
+
 
 # ---- common styles ----
 BUTTON_MENU = {
     "font": FONT_MENU_BTN,
-    "bg": COLOR_WHITE,
+    "bg": "white",
     "bd": 3,
     "cursor": "hand2",
     "compound": "left",
