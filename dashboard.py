@@ -190,8 +190,8 @@ class IMS(BaseWindow):
             self.lbl_clock.config(
                 text=f"Welcome to Inventory Management System\t\t Date: {date_}\t\t Time: {time_}"
             )
-            #con.close()
-            self.lbl_clock.after(200, self.update_content)
+            
+            self.content_updater = self.lbl_clock.after(1000, self.update_content)
 
         except Exception as ex:
             msg_manager("Error",f"Error due to : {str(ex)}", self)

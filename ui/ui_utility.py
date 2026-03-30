@@ -16,10 +16,11 @@ class BaseWindow:
         self.root.title(f"{module_name} | {self.user}")
 
     def logout(self):
-        print(self.launcher)
         if not msg_manager("Confirm", "Do you really want to logout?", self):
             return
-
+        
+        if hasattr(self, "content_updater"):
+            self.lbl_clock.after_cancel(self.content_updater)
         from modules.login import LoginSystem
         from tkinter import Tk
 
