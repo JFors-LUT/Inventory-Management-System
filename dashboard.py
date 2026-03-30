@@ -35,6 +35,8 @@ class IMS(BaseWindow):
         self.update_content()
 
     def init_data(self):
+        #dashboard update poll rate in milliseconds
+        self.update_poll_rate = 1000
         #dashboard images
         self.IMG_LOGO = os.path.join(IMAGE_DIR, "logo1.png")
         self.IMG_MENU = os.path.join(IMAGE_DIR, "menu_im.png")
@@ -190,8 +192,8 @@ class IMS(BaseWindow):
             self.lbl_clock.config(
                 text=f"Welcome to Inventory Management System\t\t Date: {date_}\t\t Time: {time_}"
             )
-            
-            self.content_updater = self.lbl_clock.after(1000, self.update_content)
+
+            self.content_updater = self.lbl_clock.after(self.update_poll_rate, self.update_content)
 
         except Exception as ex:
             msg_manager("Error",f"Error due to : {str(ex)}", self)

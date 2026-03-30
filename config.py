@@ -12,9 +12,5 @@ DB_DIR = os.path.join(DATA_DIR, "db")
 DB_PATH = os.path.join(DB_DIR, "ims.db")
 
 
-# ------------------ STYLE SETTINGS ------------------
-
-
-
 # ----------- MK BILL DIRECTORY ------------
 os.makedirs(BILL_DIR, exist_ok=True)
