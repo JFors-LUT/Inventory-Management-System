@@ -418,8 +418,6 @@ class billClass(BaseWindow):
         elif int(self.var_qty.get())>int(self.var_stock.get()):
             msg_manager("Error","Invalid Quantity", self)
         else:
-            #price_cal=int(self.var_qty.get())*float(self.var_price.get())
-            #price_cal=float(price_cal)
             price_cal=self.var_price.get()
             cart_data=[self.var_pid.get(),self.var_pname.get(),price_cal,self.var_qty.get(),self.var_stock.get()]
             #---------- update cart --------------
@@ -436,7 +434,6 @@ class billClass(BaseWindow):
                     if self.var_qty.get()=="0":
                         self.cart_list.pop(index_)
                     else:
-                        #self.cart_list[index_][2]=price_cal
                         self.cart_list[index_][3]=self.var_qty.get()
             else:
                 self.cart_list.append(cart_data)
@@ -577,6 +574,7 @@ class billClass(BaseWindow):
             os.startfile(new_file,'print')
         else:
             msg_manager("Print","Please generate bill to print the receipt", self)
+
 
 if __name__=="__main__":
     from modules.login import LoginSystem
