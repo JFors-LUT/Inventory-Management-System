@@ -54,8 +54,8 @@ def test_product_validate_rejects_select_option(monkeypatch):
     prod = productClass.__new__(productClass)
     prod.var_name = DummyVar("iPhone")
     prod.var_price = DummyVar("100")
-    prod.var_qty = DummyVar("-1")
-    prod.var_caty = DummyVar("Select")
+    prod.var_qty = DummyVar("1")
+    prod.var_cat = DummyVar("Select")
     prod.var_sup = DummyVar("Apple Inc.")
 
     assert prod.validate() is False
